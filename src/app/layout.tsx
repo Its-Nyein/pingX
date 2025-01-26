@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Bebas_Neue, Inter, Roboto } from "next/font/google"
 import "./globals.css"
 import { cn } from "@/lib/utils"
+import { ClerkProvider } from "@clerk/nextjs"
 
 const roboto = Roboto({
   weight: ["300","400","700"],
@@ -27,10 +28,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={cn(roboto.variable, bebas.variable)}>
-      <body className="font-sans bg-brand-50 text-brand-950 antialiased">
-        {children}
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" className={cn(roboto.variable, bebas.variable)}>
+        <body className="font-sans bg-brand-50 text-brand-950 antialiased">
+          {children}
+        </body>
+      </html>
+    </ClerkProvider>
   )
 }
