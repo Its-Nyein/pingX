@@ -1,14 +1,18 @@
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import { EB_Garamond } from "next/font/google"
+import { Bebas_Neue, Inter, Roboto } from "next/font/google"
 import { cn } from "@/app/lib/utils"
-
 import "./globals.css"
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
-const eb_garamond = EB_Garamond({
+const roboto = Roboto({
+  weight: ["300","400","700"],
   subsets: ["latin"],
-  variable: "--font-heading",
+  variable: "--font-roboto"
+})
+
+const bebas = Bebas_Neue({
+  weight: ["400"],
+  subsets: ["latin"],
+  variable: "--font-bebas"
 })
 
 export const metadata: Metadata = {
@@ -23,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={cn(inter.variable, eb_garamond.variable)}>
+    <html lang="en" className={cn(roboto.variable, bebas.variable)}>
       <body className="font-sans bg-brand-50 text-brand-950 antialiased">
         {children}
       </body>
