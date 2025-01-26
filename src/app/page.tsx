@@ -1,3 +1,4 @@
+import Button from "./components/button";
 import Heading from "./components/heading";
 import { MaxWidthWrapper } from "./components/max-width-wrapper";
 import { Check } from "lucide-react";
@@ -34,6 +35,10 @@ const page = () => {
                 </li>
               ))}
             </ul>
+
+            <div className="w-full max-w-80">
+              <Button href="/sign-up" className="h-14 w-full relative z-10 text-base shadow-lg transition-shadow hover:shadow-xl">Start For Free Today</Button>
+            </div>
           </div>
         </MaxWidthWrapper>
       </section>
