@@ -1,6 +1,6 @@
-import Button from "./components/button";
-import Heading from "./components/heading";
-import { MaxWidthWrapper } from "./components/max-width-wrapper";
+import Button from "../components/button";
+import Heading from "../components/heading";
+import { MaxWidthWrapper } from "../components/max-width-wrapper";
 import { Check } from "lucide-react";
 
 const page = () => {

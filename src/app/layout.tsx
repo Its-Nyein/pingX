@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { Bebas_Neue, Inter, Roboto } from "next/font/google"
-import { cn } from "@/app/lib/utils"
 import "./globals.css"
+import { cn } from "@/lib/utils"
 
 const roboto = Roboto({
   weight: ["300","400","700"],
