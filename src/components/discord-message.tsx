@@ -25,7 +25,7 @@ const getBadgeStyles = (color: BadgeColor) => {
         case "#faa61a":
             return "bg-yellow-500/10 text-yellow-400 ring-yellow-500/20"
         default:
-            return "bg-gray-500/10 text-gray-400 ring-gray-500/20"
+            return "bg-red-500/10 text-red-400 ring-red-500/20"
     }
 }
 
