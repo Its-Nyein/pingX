@@ -68,7 +68,7 @@ const DiscordMessage = ({
                             {badgeText}
                         </span>
                     ): null}
-                    <p className="text-white text-base/7 font-semibold order-1">{title}</p>
+                    <p className="text-white text-sm md:text-base/7 font-semibold order-1">{title}</p>
                 </div>
 
                 {Object.entries(content).map(([key, value]) => (
