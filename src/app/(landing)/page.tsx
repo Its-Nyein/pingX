@@ -3,6 +3,8 @@ import Button from "../../components/button";
 import Heading from "../../components/heading";
 import { MaxWidthWrapper } from "../../components/max-width-wrapper";
 import { Check } from "lucide-react";
+import { AnimatedList, AnimatedListItem } from "@/components/ui/animated-list";
+import DiscordMessage from "@/components/discord-message";
 
 const page = () => {
   return (
@@ -49,7 +51,52 @@ const page = () => {
         <div className="relative mx-auto">
           <MaxWidthWrapper>
             <div className="-m-2 rounded-xl bg-gray-900/5 p-2 ring-1 ring-inset ring-gray-900/10 lg:-m-4 lg:rounded-2xl lg:p-4">
-              <MockDiscordUI></MockDiscordUI>
+              <MockDiscordUI>
+                <AnimatedList>
+                  <DiscordMessage
+                    avatarSrc="/brand-asset-profile-avatar.jpg"
+                    avatarAlt="pingX avatar"
+                    username="ping_X"
+                    timestamp="Today at 12:45AM"
+                    badgeText="SignUp"
+                    badgeColor="#43b581"
+                    title="New user signed up"
+                    content={{
+                      name: "Nyeinn Dev",
+                      email: "nyeindev@gmail.com.mm"
+                    }}
+                  />
+
+                <DiscordMessage
+                    avatarSrc="/brand-asset-profile-avatar.jpg"
+                    avatarAlt="pingX Avatar"
+                    username="ping_X"
+                    timestamp="Today at 01:00AM"
+                    badgeText="Revenue"
+                    badgeColor="#faa61a"
+                    title="Payment received"
+                    content={{
+                      amount: "$49.00",
+                      email: "pingx@gmail.com.mm",
+                      plan: "PRO",
+                    }}
+                  />
+
+                  <DiscordMessage
+                    avatarSrc="/brand-asset-profile-avatar.jpg"
+                    avatarAlt="pingX Avatar"
+                    username="ping_X"
+                    timestamp="Today at 5:11AM"
+                    badgeText="Milestone"
+                    badgeColor="#5865f2"
+                    title="Revenue Milestone Achieved"
+                    content={{
+                      recurringRevenue: "$5.000 USD",
+                      growth: "+8.2%",
+                    }}
+                  />
+                </AnimatedList>
+              </MockDiscordUI>
             </div>
           </MaxWidthWrapper>
         </div>
