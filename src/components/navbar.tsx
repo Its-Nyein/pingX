@@ -57,13 +57,13 @@ const Navbar = () => {
                         <div className="hidden md:flex h-8 w-px bg-gray-200" />
 
                         <Link 
-                          href="/sign-out"
+                          href="/sign-up"
                           className={buttonVariants({
                             size: "sm",
-                            className: "hidden md:flex items-center gap-1"
+                            className: "flex items-center gap-1"
                           })}
                           >
-                            Sign Out <ArrowRight className="size-4 ml-1.5"/>
+                            Sign Up <ArrowRight className="hidden md:flex size-4 ml-1"/>
                         </Link>
                     </>
                 )}

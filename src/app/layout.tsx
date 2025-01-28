@@ -30,8 +30,10 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" className={cn(roboto.variable, bebas.variable)}>
-        <body className="font-sans bg-brand-50 text-brand-950 antialiased">
-          {children}
+        <body className="min-h-[calc(100vh-1px)] font-sans bg-brand-50 text-brand-950 antialiased flex flex-col">
+          <main className="relative flex flex-col flex-1">
+            {children}
+          </main>
         </body>
       </html>
     </ClerkProvider>
