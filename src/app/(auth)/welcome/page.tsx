@@ -1,6 +1,7 @@
 import Heading from "@/components/heading"
 import LoadingSpinner from "@/components/loading-spinner"
 import { LucideProps } from "lucide-react"
+import {useQuery} from "@tanstack/react-query"
 
 const Page = () => {
   return (
