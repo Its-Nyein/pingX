@@ -3,6 +3,7 @@ import { Bebas_Neue, Inter, Roboto } from "next/font/google"
 import "./globals.css"
 import { cn } from "@/lib/utils"
 import { ClerkProvider } from "@clerk/nextjs"
+import { Providers } from "@/components/providers"
 
 const roboto = Roboto({
   weight: ["300","400","700"],
@@ -32,7 +33,7 @@ export default function RootLayout({
       <html lang="en" className={cn(roboto.variable, bebas.variable)}>
         <body className="min-h-[calc(100vh-1px)] font-sans bg-brand-50 text-brand-950 antialiased flex flex-col">
           <main className="relative flex flex-col flex-1">
-            {children}
+            <Providers>{children}</Providers>
           </main>
         </body>
       </html>
