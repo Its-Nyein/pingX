@@ -31,12 +31,14 @@ export const CreateEventCategoryModal = ({children}: PropsWithChildren) => {
         }
     })
 
-    const {register, handleSubmit, formState: {errors}} = useForm<EventCategoryForm>({
+    const {register, handleSubmit, formState: {errors}, reset} = useForm<EventCategoryForm>({
         resolver: zodResolver(EVENT_CATEGORY_SCHEMA)
     })
 
     const onSubmit = async (data: EventCategoryForm) => {
-        createEventCategory(data)
+        createEventCategory(data, {
+            onSettled: () => reset()
+        })
     }
 
     return(
