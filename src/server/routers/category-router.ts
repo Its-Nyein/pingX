@@ -83,5 +83,23 @@ export const categoryRouter = router({
             })
 
             return c.json({success: true})
+        }),
+
+    createEventCategory: privateProcedure
+        .input(z.object({
+            name: z.string().min(1, "Category name is required").regex(/^[a-zA-Z0-9-]+$/, "Category name can only contain letters, numbers, and hyphens")
+        }))
+        .mutation(async ({c, ctx, input}) => {
+            const { user } = ctx;
+            const { name } = input;
+
+            const eventCategory = await db.eventCategory.create({
+                data: {
+                    name: name.toLowerCase(),
+                    userId: user.id
+                }
+            })
+
+            return c.json({ eventCategory })
         })
 })
