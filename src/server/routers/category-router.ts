@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { router } from "../__internals/router";
 import { privateProcedure } from "../procedures";
 import { startOfMonth } from "date-fns";
+import { z } from "zod";
 
 export const categoryRouter = router({
     getEventCategories: privateProcedure.query(async ({c, ctx}) => {
@@ -70,5 +71,17 @@ export const categoryRouter = router({
         // superjson is a helper function that serializes the response
         // superjson properly handle dates but json.stringify does not
         return c.superjson({ categories: categoriesWithCount})
-    })
+    }),
+
+    deleteCategory: privateProcedure
+        .input(z.object({ name: z.string() }))
+        .mutation(async ({c, input, ctx}) => {
+            const { name } = input;
+
+            await db.eventCategory.delete({
+                where: {name_userId: {name, userId: ctx.user.id}}
+            })
+
+            return c.json({success: true})
+        })
 })

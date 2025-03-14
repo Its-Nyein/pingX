@@ -1,16 +1,18 @@
 "use client"
 
 import { client } from "@/lib/client"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import LoadingSpinner  from "@/components/loading-spinner"
 import { format, formatDistanceToNow } from "date-fns"
 import { ArrowRight, BarChart2, Clock, Database, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { useState } from "react"
+import { Modal } from "@/components/ui/modal"
 
 export const DashboardContent = () => {
     const [deletingCategory, setDeletingCategory] = useState<string | null>(null);
+    const queryClient = useQueryClient();
 
     const {data: categories, isPending: isEventCategoryLoading} = useQuery({
         queryKey: ["user-event-categories"],
@@ -18,6 +20,16 @@ export const DashboardContent = () => {
             const res = await client.category.getEventCategories.$get();
             const {categories} = await res.json();
             return categories;
+        }
+    })
+
+    const {mutate: deleteCategory, isPending: isDeletingCategory} = useMutation({
+        mutationFn: async (name: string) => {
+            await client.category.deleteCategory.$post({name});
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["user-event-categories"] });
+            setDeletingCategory(null);
         }
     })
 
@@ -112,6 +124,40 @@ export const DashboardContent = () => {
                     ))
                 }
             </ul>
+
+            <Modal
+                showModal={!!deletingCategory}
+                setShowModal={() => setDeletingCategory(null)}
+                className="max-w-md p-8"
+            >
+                <div className="space-y-6">
+                    <div>
+                        <h2 className="text-lg/7 font-medium text-gray-950 tracking-tight">
+                            Delete Category
+                        </h2>
+                        <p className="text-sm/6 text-gray-600">
+                            Are you sure you want to delete the <span className="font-bold text-base">{deletingCategory}</span> category?
+                            This action cannot be undone.
+                        </p>
+                    </div>
+
+                    <div className="flex justify-end space-x-3 pt-4 border-t">
+                        <Button
+                            variant="outline"
+                            onClick={() => setDeletingCategory(null)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={() => deletingCategory && deleteCategory(deletingCategory)}
+                            disabled={isDeletingCategory}
+                        >
+                            {isDeletingCategory ? "Deleting..." : "Delete"}
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
         </>
     )
 }

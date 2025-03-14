@@ -17,32 +17,32 @@ enum Plan {
 }
 
 model User {
-  id String @id @default(cuid())
-  externalId String? @unique
-  quotoaLimit Int
-  plan Plan @default(FREE)
-  email String @unique
-  apiKey String @unique @default(cuid())
-  discordId String?
+  id              String          @id @default(cuid())
+  externalId      String?         @unique
+  quotoaLimit     Int
+  plan            Plan            @default(FREE)
+  email           String          @unique
+  apiKey          String          @unique @default(cuid())
+  discordId       String?
   eventCategories EventCategory[]
-  event Event[]
-  quota Quota[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  event           Event[]
+  quota           Quota[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 
   @@index([email, apiKey])
 }
 
 model EventCategory {
-  id String @id @default(cuid())
-  name String
-  user User @relation(fields: [userId], references: [id])
-  userId String
-  events Event[]
+  id        String   @id @default(cuid())
+  name      String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  events    Event[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([name, userId])
+  @@unique([name, userId])
 }
 
 enum Status {
@@ -52,27 +52,27 @@ enum Status {
 }
 
 model Event {
-  id String @id @default(cuid())
-  name String
-  data Json
+  id               String         @id @default(cuid())
+  name             String
+  data             Json
   formattedMessage String
-  deliveryStatus Status @default(PENDING)
-  user User @relation(fields: [userId], references: [id])
-  userId String
-  eventCategory EventCategory? @relation(fields: [eventCategoryId], references: [id])
-  eventCategoryId String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  deliveryStatus   Status         @default(PENDING)
+  user             User           @relation(fields: [userId], references: [id])
+  userId           String
+  eventCategory    EventCategory? @relation(fields: [eventCategoryId], references: [id])
+  eventCategoryId  String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
   @@index([createdAt])
 }
 
 model Quota {
-  id String @id @default(cuid())
-  user User @relation(fields: [userId], references: [id])
-  userId String
-  year Int
-  month Int
-  count Int @default(0)
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  year      Int
+  month     Int
+  count     Int      @default(0)
   updatedAt DateTime @updatedAt
 }
