@@ -2,6 +2,7 @@ import DashboardPage from "@/components/dashboard-page";
 import { db } from "@/db";
 import { currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation";
+import { DashboardContent } from "./dashboard-content";
 
 const Page = async () => {
 
@@ -21,7 +22,7 @@ const Page = async () => {
 
   return (
     <DashboardPage title="Dashboard">
-        Welcome to dashboard
+        <DashboardContent/>
     </DashboardPage>
   )
 }
