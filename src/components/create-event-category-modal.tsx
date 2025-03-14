@@ -10,9 +10,11 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Button } from "./ui/button";
 import { client } from "@/lib/client";
+import { CircleAlert } from "lucide-react";
+import { EVENT_CATEGORY_VALIDATOR } from "@/lib/validators/validator";
 
 const EVENT_CATEGORY_SCHEMA = z.object({
-    name: z.string().min(1, "Category name is required").regex(/^[a-zA-Z0-9-]+$/, "Category name can only contain letters, numbers, and hyphens")
+    name: EVENT_CATEGORY_VALIDATOR
 })
 
 type EventCategoryForm = z.infer<typeof EVENT_CATEGORY_SCHEMA>;
@@ -60,16 +62,20 @@ export const CreateEventCategoryModal = ({children}: PropsWithChildren) => {
 
                     <div className="space-y-5">
                         <div>
-                            <Label htmlFor="name" className="mb-2">Name</Label>
+                            <Label htmlFor="name">Name</Label>
                             <Input
                                 id="name"
                                 autoFocus
                                 {...register("name")}
                                 placeholder="e.e. category name"
-                                className="w-full"
+                                className="w-full my-3"
                             />
                             {
-                                errors.name ? <p className="text-sm text-red-500 mt-1">{errors.name.message}</p> : null
+                                errors.name ? 
+                                    <p className="flex text-sm text-red-500 mt-1 gap-2">
+                                        <CircleAlert className="size-4"/>
+                                        {errors.name.message}
+                                    </p> : null
                             }
                         </div>
                     </div>

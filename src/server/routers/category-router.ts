@@ -3,6 +3,7 @@ import { router } from "../__internals/router";
 import { privateProcedure } from "../procedures";
 import { startOfMonth } from "date-fns";
 import { z } from "zod";
+import { EVENT_CATEGORY_VALIDATOR } from "@/lib/validators/validator";
 
 export const categoryRouter = router({
     getEventCategories: privateProcedure.query(async ({c, ctx}) => {
@@ -87,7 +88,7 @@ export const categoryRouter = router({
 
     createEventCategory: privateProcedure
         .input(z.object({
-            name: z.string().min(1, "Category name is required").regex(/^[a-zA-Z0-9-]+$/, "Category name can only contain letters, numbers, and hyphens")
+            name: EVENT_CATEGORY_VALIDATOR
         }))
         .mutation(async ({c, ctx, input}) => {
             const { user } = ctx;
