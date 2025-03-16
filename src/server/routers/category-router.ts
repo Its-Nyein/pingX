@@ -108,9 +108,9 @@ export const categoryRouter = router({
         insertQuickstartCategories: privateProcedure.mutation(async ({c, ctx}) => {
             const categories = await db.eventCategory.createMany({
                 data: [
-                    {name: "Performance"},
-                    {name: "SEO"},
-                    {name: "Security"},
+                    {name: "sale"},
+                    {name: "marketing"},
+                    {name: "support"},
                 ].map(category => ({
                     ...category,
                     userId: ctx.user.id
