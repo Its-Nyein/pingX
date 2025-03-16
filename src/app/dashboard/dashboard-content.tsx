@@ -9,6 +9,7 @@ import Link from "next/link"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { useState } from "react"
 import { Modal } from "@/components/ui/modal"
+import { DashboardEmptyState } from "./dashboard-empty-state"
 
 export const DashboardContent = () => {
     const [deletingCategory, setDeletingCategory] = useState<string | null>(null);
@@ -42,11 +43,7 @@ export const DashboardContent = () => {
     }
 
     if(!categories || categories.length === 0) {
-        return (
-            <div className="flex flex-1 justify-center items-center h-full w-full">
-                <p>Category not found</p>
-            </div>
-        )
+        return <DashboardEmptyState/>
     }
 
     return (
