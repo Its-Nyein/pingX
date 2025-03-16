@@ -2,6 +2,7 @@ import DashboardPage from "@/components/dashboard-page";
 import { db } from "@/db";
 import { currentUser } from "@clerk/nextjs/server";
 import { notFound } from "next/navigation";
+import { CategoryPageContent } from "./category-page-content";
 
 interface PageProps {
     params: {
@@ -36,7 +37,11 @@ const Page = async ({params}: PageProps) => {
             }
         },
         include: {
-            events: true
+            _count: {
+                select: {
+                    events: true
+                }
+            }
         }
     })
 
@@ -44,8 +49,12 @@ const Page = async ({params}: PageProps) => {
         return notFound();
     }
 
+    const hasEvents = category._count.events > 0;
+
     return (
-        <DashboardPage title={`${category.name} events`}></DashboardPage>
+        <DashboardPage title={`${category.name} events`}>
+            <CategoryPageContent hasEvents={hasEvents} category={category}/>
+        </DashboardPage>
     )
 }
 

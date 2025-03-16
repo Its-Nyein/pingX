@@ -8,7 +8,7 @@ interface HeadingProps extends HTMLAttributes<HTMLHeadingElement> {
 const Heading = ({children, className, ...props}: HeadingProps) => {
   return (
     <h1 className={cn(
-        "text-4xl sm:text-5xl font-heading text-zinc-800 text-pretty font-semibold tracking-tighter", 
+        "text-2xl sm:text-4xl font-heading text-zinc-800 text-pretty font-semibold tracking-tighter", 
         className
         )}
         {...props}
