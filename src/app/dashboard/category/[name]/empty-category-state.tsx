@@ -37,7 +37,7 @@ export const EmptyCategoryState = ({
         },
         body: JSON.stringify({
             category: '${categoryName}',
-            fields: {
+            data: {
             field1: 'value1', // for example: user id
             field2: 'value2' // for example: user email
             }

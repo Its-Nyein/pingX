@@ -15,7 +15,7 @@ const page = () => {
     method: "POST",
     body: JSON.stringify({
       category: "sale",
-      fields: {
+      data: {
         plan: "PRO",
         email: "pingx@gmail.com.mm",
         amount: 52.99
