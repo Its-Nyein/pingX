@@ -22,7 +22,7 @@ const Page = async () => {
   }
 
   return (
-    <DashboardPage title="Pro Membership">
+    <DashboardPage title="Account Settings">
       <SettingPageContent discordId={user.discordId ?? ""} />
     </DashboardPage>
   )
