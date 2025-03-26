@@ -33,7 +33,7 @@ export const EmptyCategoryState = ({
   }, [hasEvents, router])
 
   const codeSnippet = `
-    await fetch('http://localhost:3000/api/events', {
+    await fetch('https://ping-x.netlify.app/api/events', {
         method: 'POST',
         headers: {
             'Authorization': 'Bearer YOUR_API_KEY'

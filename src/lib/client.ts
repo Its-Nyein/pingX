@@ -12,9 +12,9 @@ const getBaseUrl = () => {
 
   return process.env.NODE_ENV === "development"
     ? "http://localhost:3000/"
-    : process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "https://<YOUR_DEPLOYED_WORKER_URL>/"
+    : process.env.NETLIFY_URL
+    ? `https://${process.env.NETLIFY_URL}`
+    : "https://ping-x.netlify.app/"
 }
 
 export const baseClient = hc<AppType>(getBaseUrl(), {

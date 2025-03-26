@@ -1,17 +1,16 @@
-import MockDiscordUI from "@/components/mock-discord-ui";
-import Button from "../../components/button";
-import Heading from "../../components/heading";
-import { MaxWidthWrapper } from "../../components/max-width-wrapper";
-import { Check } from "lucide-react";
-import { AnimatedList } from "@/components/ui/animated-list";
-import DiscordMessage from "@/components/discord-message";
-import Image from "next/image";
-import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import MockDiscordUI from "@/components/mock-discord-ui"
+import Button from "../../components/button"
+import Heading from "../../components/heading"
+import { MaxWidthWrapper } from "../../components/max-width-wrapper"
+import { Check } from "lucide-react"
+import { AnimatedList } from "@/components/ui/animated-list"
+import DiscordMessage from "@/components/discord-message"
+import Image from "next/image"
+import { PrismLight as SyntaxHighlighter } from "react-syntax-highlighter"
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism"
 
 const page = () => {
-
-  const codeSnippet = `await fetch("http://localhost:3000/api/v1/events", {
+  const codeSnippet = `await fetch("https://ping-x.netlify.app/api/v1/events", {
     method: "POST",
     body: JSON.stringify({
       category: "sale",
@@ -35,38 +34,48 @@ const page = () => {
               <Heading>
                 <span>Real-Time Saas Insights,</span>
                 <br />
-                <span className="relative bg-gradient-to-r from-brand-700 to-brand-800 text-transparent bg-clip-text">Delivered to Your Discord</span>
+                <span className="relative bg-gradient-to-r from-brand-700 to-brand-800 text-transparent bg-clip-text">
+                  Delivered to Your Discord
+                </span>
               </Heading>
             </div>
 
             <p className="text-base/7 text-gray-600 max-w-prose text-center text-pretty">
-              pingX is easiest way to monitor your Saas. Get instant notifications for {" "}
-              <span className="font-semibold text-gray-700">sales, new users or any other event</span>
-              {" "}sent directly to your discord.
+              pingX is easiest way to monitor your Saas. Get instant
+              notifications for{" "}
+              <span className="font-semibold text-gray-700">
+                sales, new users or any other event
+              </span>{" "}
+              sent directly to your discord.
             </p>
 
             <ul className="text-base/7 text-gray-600 space-y-2 flex flex-col items-start text-left">
               {[
-                "Real-Time Discord alerts for critical events", 
-                "Buy once, use forever", 
-                "Track sales, new users or any other events"
+                "Real-Time Discord alerts for critical events",
+                "Buy once, use forever",
+                "Track sales, new users or any other events",
               ].map((item, index) => (
                 <li key={index} className="flex gap-1.5 items-center text-left">
-                  <Check className="size-5 shrink-0 text-blue-700"/>
+                  <Check className="size-5 shrink-0 text-blue-700" />
                   {item}
                 </li>
               ))}
             </ul>
 
             <div className="w-full max-w-80">
-              <Button href="/sign-up" className="h-14 w-full relative z-10 text-base shadow-lg transition-shadow hover:shadow-xl">Start For Free Today</Button>
+              <Button
+                href="/sign-up"
+                className="h-14 w-full relative z-10 text-base shadow-lg transition-shadow hover:shadow-xl"
+              >
+                Start For Free Today
+              </Button>
             </div>
           </div>
         </MaxWidthWrapper>
       </section>
 
       <section className="relative bg-brand-25 pb-4">
-        <div className="absolute inset-x-0 bottom-24 top-24 bg-brand-700"/>
+        <div className="absolute inset-x-0 bottom-24 top-24 bg-brand-700" />
         <div className="relative mx-auto">
           <MaxWidthWrapper>
             <div className="-m-2 rounded-xl bg-gray-900/5 p-2 ring-1 ring-inset ring-gray-900/10 lg:-m-4 lg:rounded-2xl lg:p-4">
@@ -82,11 +91,11 @@ const page = () => {
                     title="New user signed up"
                     content={{
                       name: "Nyeinn Dev",
-                      email: "nyeindev@gmail.com.mm"
+                      email: "nyeindev@gmail.com.mm",
                     }}
                   />
 
-                <DiscordMessage
+                  <DiscordMessage
                     avatarSrc="/brand-asset-profile-avatar.jpg"
                     avatarAlt="pingX Avatar"
                     username="ping_X"
@@ -124,15 +133,19 @@ const page = () => {
       <section className="relative py-24 sm:py-28 bg-brand-25">
         <MaxWidthWrapper className="flex flex-col items-center gap-14 sm:gap-20">
           <div>
-            <h2 className="text-base/7 font-semibold text-center text-brand-600">Intuitive Monitoring</h2>
-            <Heading>Stay ahead with real-time insights</Heading>
+            <h2 className="text-base/7 font-semibold text-center text-brand-600">
+              Intuitive Monitoring
+            </h2>
+            <Heading className="text-center">
+              Stay ahead with real-time insights
+            </Heading>
           </div>
 
           {/* grid */}
           <div className="grid gap-4 lg:grid-cols-3 lg:grid-rows-2">
             {/* first grid */}
             <div className="relative lg:row-span-2">
-              <div className="absolute inset-px bg-white rounded-lg lg:rounded-l-[2rem]"/>
+              <div className="absolute inset-px bg-white rounded-lg lg:rounded-l-[2rem]" />
               <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] lg:rounded-l-[calc(2rem+1px)]">
                 <div className="px-8 pb-3 pt-8 sm:px-10 sm:pb-0 sm:pt-10">
                   <p className="mt-2 text-lg/7 font-medium tracking-tight text-brand-950 max-lg:text-center">
@@ -168,20 +181,20 @@ const page = () => {
                     Track Any Event
                   </p>
                   <p className="mt-2 text-sm/6 text-gray-600 max-lg:text-center">
-                    From new user signups to successful payments, pingX
-                    notifies you for all critical events in your SaaS.
+                    From new user signups to successful payments, pingX notifies
+                    you for all critical events in your SaaS.
                   </p>
                 </div>
 
                 <div className="flex flex-1 items-center justify-center px-8 max-lg:pb-12 max-lg:pt-10 sm:px-10 lg:pb-2">
-                    <Image
-                      src="/bento-any-event.png"
-                      alt="Bento box illustrating event tracking"
-                      className="w-full max-lg:max-w-sm"
-                      width={500}
-                      height={500}
-                    />
-                  </div>
+                  <Image
+                    src="/bento-any-event.png"
+                    alt="Bento box illustrating event tracking"
+                    className="w-full max-lg:max-w-sm"
+                    width={500}
+                    height={500}
+                  />
+                </div>
 
                 <div className="pointer-events-none absolute inset-px rounded-lg shadow ring-1 ring-black/5 max-lg:rounded-t-[2rem]" />
               </div>
@@ -225,7 +238,8 @@ const page = () => {
                     Easy Integration
                   </p>
                   <p className="mt-2 max-w-lg text-sm/6 text-gray-600 max-lg:text-center">
-                    Connect pingX with your existing workflows in minutes and call our instuitive logging API from any language.
+                    Connect pingX with your existing workflows in minutes and
+                    call our instuitive logging API from any language.
                   </p>
                 </div>
 
@@ -247,17 +261,17 @@ const page = () => {
                             ...oneDark,
                             'pre[class*="language-"]': {
                               ...oneDark['pre[class*="language-"]'],
-                              background: 'transparent',
-                              overflow: 'hidden'
+                              background: "transparent",
+                              overflow: "hidden",
                             },
                             'code[class*="language-"]': {
                               ...oneDark['code[class*="language-"]'],
-                              background: 'transparent',
-                              fontSize: '0.6rem'
-                            }
+                              background: "transparent",
+                              fontSize: "0.6rem",
+                            },
                           }}
                         >
-                          { codeSnippet }
+                          {codeSnippet}
                         </SyntaxHighlighter>
                       </div>
                     </div>
@@ -274,4 +288,4 @@ const page = () => {
   )
 }
 
-export default page;
+export default page
