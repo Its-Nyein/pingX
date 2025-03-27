@@ -1,20 +1,20 @@
-import { CreateEventCategoryModal } from "@/components/create-event-category-modal";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { client } from "@/lib/client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { CreateEventCategoryModal } from "@/components/create-event-category-modal"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { client } from "@/lib/client"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 export const DashboardEmptyState = () => {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   const { mutate: insertQuickstartCategories, isPending } = useMutation({
     mutationFn: async () => {
-      await client.category.insertQuickstartCategories.$post();
+      await client.category.insertQuickstartCategories.$post()
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["user-event-categories"] });
+      queryClient.invalidateQueries({ queryKey: ["user-event-categories"] })
     },
-  });
+  })
 
   return (
     <Card className="flex flex-col items-center justify-center rounded-2xl flex-1 text-center p-8 border border-gray-200 shadow-md">
@@ -29,7 +29,7 @@ export const DashboardEmptyState = () => {
       <div className="flex flex-col sm:flex-row items-center justify-center w-full mt-6 space-y-3 sm:space-y-0 sm:space-x-4">
         <Button
           variant="outline"
-          className="w-full sm:w-auto"
+          className="flex-1 px-6"
           onClick={() => insertQuickstartCategories()}
           disabled={isPending}
         >
@@ -37,9 +37,9 @@ export const DashboardEmptyState = () => {
         </Button>
 
         <CreateEventCategoryModal>
-          <Button className="w-full sm:w-auto">+ Add Category</Button>
+          <Button className="flex-1 px-5">+ Add Category</Button>
         </CreateEventCategoryModal>
       </div>
     </Card>
-  );
-};
+  )
+}
