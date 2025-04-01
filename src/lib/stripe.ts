@@ -12,6 +12,7 @@ export const createCheckoutSession = async ({
   userEmail: string
   userId: string
 }) => {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "")
   const session = await stripe.checkout.sessions.create({
     line_items: [
       {
@@ -20,8 +21,8 @@ export const createCheckoutSession = async ({
       },
     ],
     mode: "payment",
-    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?success=true`,
-    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing`,
+    success_url: `${appUrl}/dashboard?success=true`,
+    cancel_url: `${appUrl}/pricing`,
     customer_email: userEmail,
     metadata: {
       userId,

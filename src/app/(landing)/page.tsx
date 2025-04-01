@@ -104,7 +104,7 @@ const page = () => {
                     badgeColor="#faa61a"
                     title="Payment received"
                     content={{
-                      amount: "$49.00",
+                      amount: "$10.00",
                       email: "pingx@gmail.com.mm",
                       plan: "PRO",
                     }}
