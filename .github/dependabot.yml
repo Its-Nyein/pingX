@@ -1,38 +1,38 @@
-version: 2
-updates:
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "sunday"
-      time: "06:00"
-    open-pull-requests-limit: 5
-    assignees:
-      - "Its-Nyein"
-    reviewers:
-      - "Its-Nyein"
-    labels:
-      - "dependencies"
-      - "bot"
-    commit-message:
-      prefix: "chore(deps)"
-      include: "scope"
-    ignore:
-      - dependency-name: "react"
-      - dependency-name: "next"
-        versions: ["^14.0.0"]
+# version: 2
+# updates:
+#   - package-ecosystem: "npm"
+#     directory: "/"
+#     schedule:
+#       interval: "weekly"
+#       day: "sunday"
+#       time: "06:00"
+#     open-pull-requests-limit: 5
+#     assignees:
+#       - "Its-Nyein"
+#     reviewers:
+#       - "Its-Nyein"
+#     labels:
+#       - "dependencies"
+#       - "bot"
+#     commit-message:
+#       prefix: "chore(deps)"
+#       include: "scope"
+#     ignore:
+#       - dependency-name: "react"
+#       - dependency-name: "next"
+#         versions: ["^14.0.0"]
 
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "sunday"
-      time: "06:00"
-    open-pull-requests-limit: 5
-    assignees:
-      - "Its-Nyein"
-    reviewers:
-      - "Its-Nyein"
-    labels:
-      - "dependencies"
-      - "bot"
+#   - package-ecosystem: "github-actions"
+#     directory: "/"
+#     schedule:
+#       interval: "weekly"
+#       day: "sunday"
+#       time: "06:00"
+#     open-pull-requests-limit: 5
+#     assignees:
+#       - "Its-Nyein"
+#     reviewers:
+#       - "Its-Nyein"
+#     labels:
+#       - "dependencies"
+#       - "bot"
