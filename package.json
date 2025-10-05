@@ -35,7 +35,7 @@
     "react": "^18",
     "react-dom": "^18",
     "react-hook-form": "^7.54.2",
-    "react-syntax-highlighter": "^15.6.1",
+    "react-syntax-highlighter": "^15.6.6",
     "stripe": "^17.7.0",
     "superjson": "^2.2.1",
     "tailwind-merge": "^2.6.0",
