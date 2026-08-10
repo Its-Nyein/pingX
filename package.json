@@ -7,7 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "db:generate": "drizzle-kit generate --config drizzle.config.ts",
+    "db:migrate": "drizzle-kit migrate --config drizzle.config.ts",
+    "db:push": "drizzle-kit push --config drizzle.config.ts",
+    "db:studio": "drizzle-kit studio --config drizzle.config.ts",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.7.1",
