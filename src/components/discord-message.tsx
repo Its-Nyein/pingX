@@ -72,12 +72,12 @@ const DiscordMessage = ({
                 </div>
 
                 {Object.entries(content).map(([key, value]) => (
-                    <p key={key} className="text-[#dcddde] text-sm/6">
+                    <p key={key} className="text-discord-text text-sm/6">
                         <span className="text-[#b9bbbe]">{key}:</span>{" "}{value}
                     </p>
                 ))}
 
-                <p className="flex text-[#72767d] text-xs mt-2 items-center">
+                <p className="flex text-discord-timestamp text-xs mt-2 items-center">
                     <Clock className="size-3 mr-1"/>
                     {timestamp}
                 </p>

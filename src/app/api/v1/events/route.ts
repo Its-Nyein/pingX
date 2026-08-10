@@ -7,7 +7,7 @@ import { unknown, z } from "zod";
 
 const REQUEST_VALIDATOR = z.object({
     category: EVENT_CATEGORY_VALIDATOR,
-    data: z.record(z.string().or(z.number()).or(z.boolean())).optional(),
+    data: z.record(z.string(), z.string().or(z.number()).or(z.boolean())).optional(),
     description: z.string().optional(),
 }).strict();
 

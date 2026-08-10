@@ -11,6 +11,17 @@ type OperationType<I extends Record<string, unknown>, O> =
   | QueryOperation<I, O>
   | MutationOperation<I, O>
 
+/**
+ * Operation handlers are typed as returning `TypedResponse<Output>`, which is a
+ * phantom type Hono uses to carry the response shape through to the RPC client.
+ * At runtime they always return a real `Response` (from `c.json` / `c.superjson`).
+ *
+ * Hono 4.13 tightened `Handler` to require `Response`, so we reassert that here
+ * at the single registration boundary rather than weakening the public types
+ * that `AppType` inference depends on.
+ */
+const asHandlerResult = (result: unknown) => result as Promise<Response>
+
 export const router = <T extends Record<string, OperationType<any, any>>>(
   obj: T
 ) => {
@@ -85,15 +96,21 @@ export const router = <T extends Record<string, OperationType<any, any>>>(
               }
             }
 
-            return operation.handler({ c, ctx, input })
+            return asHandlerResult(operation.handler({ c, ctx, input }))
           }
         )
       } else {
-        route.get(path, ...operationMiddlewares, (c) => {
-          const ctx = c.get("__middleware_output") || {}
+        route.get(
+          path,
+          ...(operationMiddlewares as [MiddlewareHandler, ...MiddlewareHandler[]]),
+          (c) => {
+            const ctx = c.get("__middleware_output") || {}
 
-          return operation.handler({ c, ctx, input: undefined })
-        })
+            return asHandlerResult(
+              operation.handler({ c, ctx, input: undefined })
+            )
+          }
+        )
       }
     } else if (operation.type === "mutation") {
       if (operation.schema) {
@@ -119,15 +136,21 @@ export const router = <T extends Record<string, OperationType<any, any>>>(
               }
             }
 
-            return operation.handler({ c, ctx, input })
+            return asHandlerResult(operation.handler({ c, ctx, input }))
           }
         )
       } else {
-        route.post(path, ...operationMiddlewares, (c) => {
-          const ctx = c.get("__middleware_output") || {}
+        route.post(
+          path,
+          ...(operationMiddlewares as [MiddlewareHandler, ...MiddlewareHandler[]]),
+          (c) => {
+            const ctx = c.get("__middleware_output") || {}
 
-          return operation.handler({ c, ctx, input: undefined })
-        })
+            return asHandlerResult(
+              operation.handler({ c, ctx, input: undefined })
+            )
+          }
+        )
       }
     }
   })

@@ -25,7 +25,7 @@ const ApiKeySettings = ({ apiKey }: { apiKey: string }) => {
             <Button
               variant="ghost"
               onClick={copyApi}
-              className="p-1 w-10 focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="p-1 w-10 focus:outline-hidden focus:ring-2 focus:ring-brand-500"
             >
               {copySuccess ? (
                 <CheckIcon className="size-4 text-brand-900" />

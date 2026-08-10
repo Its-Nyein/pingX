@@ -29,14 +29,14 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <ClerkProvider>
-      <html lang="en" className={cn(roboto.variable, bebas.variable)}>
-        <body className="min-h-[calc(100vh-1px)] font-sans bg-brand-50 text-brand-950 antialiased flex flex-col">
+    <html lang="en" className={cn(roboto.variable, bebas.variable)}>
+      <body className="min-h-[calc(100vh-1px)] font-sans bg-brand-50 text-brand-950 antialiased flex flex-col">
+        <ClerkProvider>
           <main className="relative flex flex-col flex-1">
             <Providers>{children}</Providers>
           </main>
-        </body>
-      </html>
-    </ClerkProvider>
+        </ClerkProvider>
+      </body>
+    </html>
   )
 }

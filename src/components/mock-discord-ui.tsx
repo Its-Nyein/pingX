@@ -29,7 +29,7 @@ const MockDiscordUI = ({children} : PropsWithChildren) => {
 
         {/* dm list */}
         <div className="hidden md:flex flex-col bg-[#2f3136]">
-            <div className="px-4 h-16 border-b border-[#202225] flex items-center shadow-sm">
+            <div className="px-4 h-16 border-b border-[#202225] flex items-center shadow-xs">
                 <div className="w-full h-8 bg-[#202225] text-sm rounded flex items-center justify-center px-2 text-gray-500 cursor-not-allowed">
                     Find or start a conversation
                 </div>
@@ -37,11 +37,11 @@ const MockDiscordUI = ({children} : PropsWithChildren) => {
 
             <div className="flex-1 overflow-y-auto pt-4">
                 <div className="px-2 mb-4">
-                    <div className="flex text-sm px-2 py-1.5 items-center hover:bg-[#393c43] text-[#dcddde] cursor-not-allowed">
+                    <div className="flex text-sm px-2 py-1.5 items-center hover:bg-[#393c43] text-discord-text cursor-not-allowed">
                         <UserCircle className="mr-4 size-8 text-[#b9bbbe]"/>
                         <span className="text-sm font-medium">Friends</span>
                     </div>
-                    <div className="flex text-sm px-2 py-1.5 items-center hover:bg-[#393c43] text-[#dcddde] cursor-not-allowed">
+                    <div className="flex text-sm px-2 py-1.5 items-center hover:bg-[#393c43] text-discord-text cursor-not-allowed">
                         <Inbox className="mr-4 size-8 text-[#b9bbbe]"/>
                         <span className="text-sm font-medium">Nitro</span>
                     </div>
@@ -94,7 +94,7 @@ const MockDiscordUI = ({children} : PropsWithChildren) => {
         {/* main content here */}
         <div className="flex-1 flex flex-col">
             {/* dm list */}
-            <div className="h-16 bg-[#36393f] flex items-center px-4 shadow-sm border-b border-[#202225]">
+            <div className="h-16 bg-[#36393f] flex items-center px-4 shadow-xs border-b border-[#202225]">
                 <div className="md:hidden mr-4">
                     <Menu className="size-6 text-[#b9bbbe] hover:text-white cursor-pointer"/>
                 </div>
@@ -137,7 +137,7 @@ const MockDiscordUI = ({children} : PropsWithChildren) => {
                        type="text"
                        placeholder="Message @ping_X"
                        readOnly
-                       className="flex-1 bg-transparent py-2 px-1 text-white placeholder-[#72767d] focus:outline-none cursor-not-allowed"
+                       className="flex-1 bg-transparent py-2 px-1 text-white placeholder-discord-timestamp focus:outline-hidden cursor-not-allowed"
                     />
                     <div className="flex items-center space-x-3 text-[#b9bbbe]">
                         <Gift className="size-5 hover:text-white cursor-not-allowed hidden sm:block"/>

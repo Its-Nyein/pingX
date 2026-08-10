@@ -34,7 +34,7 @@ const page = () => {
               <Heading>
                 <span>Real-Time Saas Insights,</span>
                 <br />
-                <span className="relative bg-gradient-to-r from-brand-700 to-brand-800 text-transparent bg-clip-text">
+                <span className="relative bg-linear-to-r from-brand-700 to-brand-800 text-transparent bg-clip-text">
                   Delivered to Your Discord
                 </span>
               </Heading>
@@ -145,8 +145,8 @@ const page = () => {
           <div className="grid gap-4 lg:grid-cols-3 lg:grid-rows-2">
             {/* first grid */}
             <div className="relative lg:row-span-2">
-              <div className="absolute inset-px bg-white rounded-lg lg:rounded-l-[2rem]" />
-              <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] lg:rounded-l-[calc(2rem+1px)]">
+              <div className="absolute inset-px bg-white rounded-lg lg:rounded-l-4xl" />
+              <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(var(--radius-lg)+1px)] lg:rounded-l-[calc(2rem+1px)]">
                 <div className="px-8 pb-3 pt-8 sm:px-10 sm:pb-0 sm:pt-10">
                   <p className="mt-2 text-lg/7 font-medium tracking-tight text-brand-950 max-lg:text-center">
                     Real-time Notifications
@@ -157,7 +157,7 @@ const page = () => {
                   </p>
                 </div>
 
-                <div className="relative min-h-[30rem] w-full grow [container-type:inline-size] max-lg:mx-auto max-lg:max-w-sm">
+                <div className="relative min-h-120 w-full grow @container max-lg:mx-auto max-lg:max-w-sm">
                   <div className="absolute inset-x-10 bottom-0 top-10 overflow-hidden rounded-t-[12cqw] border-x-[3cqw] border-t-[3cqw] border-gray-700 bg-gray-900 shadow-2xl">
                     <Image
                       src="/pingx-sm.png"
@@ -169,13 +169,13 @@ const page = () => {
                 </div>
               </div>
 
-              <div className="pointer-events-none absolute inset-px rounded-lg shadow ring-1 ring-black/5 lg:rounded-l-[2rem]" />
+              <div className="pointer-events-none absolute inset-px rounded-lg shadow-sm ring-1 ring-black/5 lg:rounded-l-4xl" />
             </div>
 
             {/* second grid */}
             <div className="relative max-lg:row-start-1">
-              <div className="absolute inset-px rounded-lg bg-white max-lg:rounded-t-[2rem]" />
-              <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] max-lg:rounded-t-[calc(2rem+1px)]">
+              <div className="absolute inset-px rounded-lg bg-white max-lg:rounded-t-4xl" />
+              <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(var(--radius-lg)+1px)] max-lg:rounded-t-[calc(2rem+1px)]">
                 <div className="px-8 pb-3 pt-8 sm:px-10 sm:pb-0 sm:pt-10">
                   <p className="mt-2 text-lg/7 font-medium tracking-tight text-brand-950 max-lg:text-center">
                     Track Any Event
@@ -196,14 +196,14 @@ const page = () => {
                   />
                 </div>
 
-                <div className="pointer-events-none absolute inset-px rounded-lg shadow ring-1 ring-black/5 max-lg:rounded-t-[2rem]" />
+                <div className="pointer-events-none absolute inset-px rounded-lg shadow-sm ring-1 ring-black/5 max-lg:rounded-t-4xl" />
               </div>
             </div>
 
             {/* third grid */}
             <div className="relative max-lg:row-start-3 lg:col-start-2 lg:row-start-2">
               <div className="absolute inset-px rounded-lg bg-white" />
-              <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)]">
+              <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(var(--radius-lg)+1px)]">
                 <div className="px-8 pt-8 sm:px-10 sm:pt-10">
                   <p className="mt-2 text-lg/7 font-medium tracking-tight text-brand-950 max-lg:text-center">
                     Track Any Properties
@@ -225,14 +225,14 @@ const page = () => {
                 </div>
               </div>
 
-              <div className="pointer-events-none absolute inset-px rounded-lg shadow ring-1 ring-black/5" />
+              <div className="pointer-events-none absolute inset-px rounded-lg shadow-sm ring-1 ring-black/5" />
             </div>
 
             {/* fourth grid */}
             <div className="relative lg:row-span-2">
-              <div className="absolute inset-px rounded-lg bg-white max-lg:rounded-b-[2rem] lg:rounded-r-[2rem]" />
+              <div className="absolute inset-px rounded-lg bg-white max-lg:rounded-b-4xl lg:rounded-r-4xl" />
 
-              <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] max-lg:rounded-b-[calc(2rem+1px)] lg:rounded-r-[calc(2rem+1px)]">
+              <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(var(--radius-lg)+1px)] max-lg:rounded-b-[calc(2rem+1px)] lg:rounded-r-[calc(2rem+1px)]">
                 <div className="px-8 pb-3 pt-8 sm:px-10 sm:pb-0 sm:pt-10">
                   <p className="mt-2 text-lg/7 font-medium tracking-tight text-brand-950 max-lg:text-center">
                     Easy Integration
@@ -243,7 +243,7 @@ const page = () => {
                   </p>
                 </div>
 
-                <div className="relative min-h-[30rem] w-full grow">
+                <div className="relative min-h-120 w-full grow">
                   <div className="absolute bottom-0 left-10 right-0 top-10 overflow-hidden rounded-tl-xl bg-gray-900 shadow-2xl">
                     <div className="flex bg-gray-800/40 ring-1 ring-white/5">
                       <div className="-mb-px flex text-sm/6 font-medium text-gray-400">
@@ -254,7 +254,7 @@ const page = () => {
                     </div>
 
                     <div className="overflow-hidden">
-                      <div className="max-h-[30rem]">
+                      <div className="max-h-120">
                         <SyntaxHighlighter
                           language="javascript"
                           style={{
@@ -279,7 +279,7 @@ const page = () => {
                 </div>
               </div>
 
-              <div className="pointer-events-none absolute inset-px rounded-lg shadow ring-1 ring-black/5 max-lg:rounded-b-[2rem] lg:rounded-r-[2rem]" />
+              <div className="pointer-events-none absolute inset-px rounded-lg shadow-sm ring-1 ring-black/5 max-lg:rounded-b-4xl lg:rounded-r-4xl" />
             </div>
           </div>
         </MaxWidthWrapper>

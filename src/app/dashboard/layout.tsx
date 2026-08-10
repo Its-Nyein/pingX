@@ -50,7 +50,7 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
       </p>
 
       {/* navigation items */}
-      <div className="flex-grow">
+      <div className="grow">
         <ul>
           {SIDEBAR_ITEMS.map(({ category, items }) => (
             <li key={category} className="mb-4 md:mb-8">
