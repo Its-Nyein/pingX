@@ -33,7 +33,6 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "prisma-extensions.d.ts",
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [

@@ -1,8 +1,9 @@
 import { addMonths, startOfMonth } from "date-fns"
 import { router } from "../__internals/router"
 import { privateProcedure } from "../procedures"
-import { db } from "@/db"
+import { db, eventCategories, quotas, users } from "@/db"
 import { FREE_QUOTA, PRO_QUOTA } from "@/config"
+import { and, count, eq } from "drizzle-orm"
 import { z } from "zod"
 
 export const projectRouter = router({
@@ -11,21 +12,24 @@ export const projectRouter = router({
 
     const currentDate = startOfMonth(new Date())
 
-    const quota = await db.quota.findFirst({
-      where: {
-        userId: user.id,
-        month: currentDate.getMonth() + 1,
-        year: currentDate.getFullYear(),
-      },
-    })
+    const [quota] = await db
+      .select()
+      .from(quotas)
+      .where(
+        and(
+          eq(quotas.userId, user.id),
+          eq(quotas.month, currentDate.getMonth() + 1),
+          eq(quotas.year, currentDate.getFullYear())
+        )
+      )
+      .limit(1)
 
     const eventCount = quota?.count ?? 0
 
-    const categoryCount = await db.eventCategory.count({
-      where: {
-        userId: user.id,
-      },
-    })
+    const [{ value: categoryCount }] = await db
+      .select({ value: count() })
+      .from(eventCategories)
+      .where(eq(eventCategories.userId, user.id))
 
     const limits = user.plan === "PRO" ? PRO_QUOTA : FREE_QUOTA
 
@@ -46,10 +50,7 @@ export const projectRouter = router({
       const { user } = ctx
       const { discordId } = input
 
-      await db.user.update({
-        where: { id: user.id },
-        data: { discordId },
-      })
+      await db.update(users).set({ discordId }).where(eq(users.id, user.id))
 
       return c.json({ success: true })
     }),

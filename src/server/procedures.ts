@@ -1,6 +1,7 @@
-import { db } from "@/db"
+import { db, users } from "@/db"
 import { j } from "./__internals/j"
 import { currentUser } from "@clerk/nextjs/server"
+import { eq } from "drizzle-orm"
 import { HTTPException } from "hono/http-exception"
 
 const authMiddleware = j.middleware(async ({ c, next }) => {
@@ -9,9 +10,11 @@ const authMiddleware = j.middleware(async ({ c, next }) => {
   if (authHeader) {
     const apiKey = authHeader.split(" ")[1] // bearer <API_KEY>
 
-    const user = await db.user.findUnique({
-      where: { apiKey },
-    })
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.apiKey, apiKey))
+      .limit(1)
 
     if (user) return next({ user })
   }
@@ -22,9 +25,11 @@ const authMiddleware = j.middleware(async ({ c, next }) => {
     throw new HTTPException(401, { message: "Unauthorized" })
   }
 
-  const user = await db.user.findUnique({
-    where: { externalId: auth.id },
-  })
+  const [user] = await db
+    .select()
+    .from(users)
+    .where(eq(users.externalId, auth.id))
+    .limit(1)
 
   if (!user) {
     throw new HTTPException(401, { message: "Unauthorized" })

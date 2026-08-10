@@ -1,6 +1,6 @@
 "use client"
 
-import { Event, EventCategory } from "@prisma/client"
+import type { Event, EventCategory } from "@/db"
 import { useQuery } from "@tanstack/react-query"
 import { EmptyCategoryState } from "./empty-category-state"
 import { useEffect, useMemo, useState } from "react"

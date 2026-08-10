@@ -56,3 +56,7 @@ export const events = pgTable(
       .onUpdate("cascade"),
   ]
 )
+
+/** Replaces the `Event` type previously imported from @prisma/client. */
+export type Event = typeof events.$inferSelect
+export type NewEvent = typeof events.$inferInsert

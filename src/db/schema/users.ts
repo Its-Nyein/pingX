@@ -40,3 +40,7 @@ export const users = pgTable(
   },
   (table) => [index("User_email_apiKey_idx").on(table.email, table.apiKey)]
 )
+
+/** Replaces the `User` type previously imported from @prisma/client. */
+export type User = typeof users.$inferSelect
+export type NewUser = typeof users.$inferInsert

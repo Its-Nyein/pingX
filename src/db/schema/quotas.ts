@@ -46,3 +46,6 @@ export const quotas = pgTable(
       .onUpdate("cascade"),
   ]
 )
+
+export type Quota = typeof quotas.$inferSelect
+export type NewQuota = typeof quotas.$inferInsert

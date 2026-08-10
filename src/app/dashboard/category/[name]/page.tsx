@@ -1,6 +1,7 @@
 import DashboardPage from "@/components/dashboard-page";
-import { db } from "@/db";
+import { db, eventCategories, events, users } from "@/db";
 import { currentUser } from "@clerk/nextjs/server";
+import { and, count, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { CategoryPageContent } from "./category-page-content";
 
@@ -22,36 +23,37 @@ const Page = async (props: PageProps) => {
         return notFound();
     }
 
-    const user = await db.user.findUnique({
-        where: {
-            externalId: auth.id
-        }
-    })
+    const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.externalId, auth.id))
+        .limit(1)
     if(!user) {
         return notFound();
     }
 
-    const category = await db.eventCategory.findUnique({
-        where: {
-            name_userId: {
-                name: params.name,
-                userId: user.id
-            }
-        },
-        include: {
-            _count: {
-                select: {
-                    events: true
-                }
-            }
-        }
-    })
+    const [category] = await db
+        .select()
+        .from(eventCategories)
+        .where(
+            and(
+                eq(eventCategories.name, params.name),
+                eq(eventCategories.userId, user.id)
+            )
+        )
+        .limit(1)
 
     if(!category) {
         return notFound();
     }
 
-    const hasEvents = category._count.events > 0;
+    // Prisma's `_count: { events: true }` include, as its own aggregate.
+    const [{ value: eventsCount }] = await db
+        .select({ value: count() })
+        .from(events)
+        .where(eq(events.eventCategoryId, category.id))
+
+    const hasEvents = eventsCount > 0;
 
     return (
         <DashboardPage title={`${category.name} events`}>
