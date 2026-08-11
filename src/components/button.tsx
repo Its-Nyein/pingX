@@ -16,10 +16,10 @@ const Button = ({children, className, href, ...props}: ButtonProps) => {
       >
         <span className="relative flex z-10 items-center gap-2">
             {children}
-            <ArrowRight className="size-4 shrink-0 text-primary-foreground transition-transform duration-300 ease-in-out group-hover:translate-x-[2px]"/>
+            <ArrowRight className="size-4 shrink-0 text-primary-foreground transition-transform duration-300 ease-in-out group-hover:translate-x-0.5"/>
         </span>
 
-        <div className="ease-[cubic-bezier(0.19,1,0.22,1)] absolute left-[-75px] top-[-50px] -z-10 h-[155px] w-8 rotate-35 bg-card opacity-20 transition-all duration-700 group-hover:left-[120%]"/>
+        <div className="ease-[cubic-bezier(0.19,1,0.22,1)] absolute -left-18.75 -top-12.5 -z-10 h-38.75 w-8 rotate-35 bg-card opacity-20 transition-all duration-700 group-hover:left-[120%]"/>
     </Link>
   )
 }

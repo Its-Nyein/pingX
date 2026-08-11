@@ -22,13 +22,13 @@ export const AuthShell = ({
 
       <div className="relative hidden overflow-hidden bg-[#0b1020] lg:block">
 
-        <div className="absolute -left-1/4 -top-1/3 size-[46rem] rounded-full bg-[radial-gradient(circle,#3b82f6_0%,transparent_65%)] opacity-30 blur-3xl" />
-        <div className="absolute -bottom-1/3 -right-1/4 size-[42rem] rounded-full bg-[radial-gradient(circle,#6366f1_0%,transparent_65%)] opacity-30 blur-3xl" />
-        <div className="absolute left-1/3 top-1/2 size-[30rem] rounded-full bg-[radial-gradient(circle,#22d3ee_0%,transparent_60%)] opacity-15 blur-3xl" />
+        <div className="absolute -left-1/4 -top-1/3 size-184 rounded-full bg-[radial-gradient(circle,#3b82f6_0%,transparent_65%)] opacity-30 blur-3xl" />
+        <div className="absolute -bottom-1/3 -right-1/4 size-168 rounded-full bg-[radial-gradient(circle,#6366f1_0%,transparent_65%)] opacity-30 blur-3xl" />
+        <div className="absolute left-1/3 top-1/2 size-120 rounded-full bg-[radial-gradient(circle,#22d3ee_0%,transparent_60%)] opacity-15 blur-3xl" />
 
         <div
           aria-hidden
-          className="absolute inset-0 opacity-[0.18]"
+          className="absolute inset-0 opacity-18"
           style={{
             backgroundImage:
               "linear-gradient(rgba(255,255,255,.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px)",
