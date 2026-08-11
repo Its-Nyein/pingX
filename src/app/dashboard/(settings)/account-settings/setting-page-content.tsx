@@ -34,9 +34,9 @@ export const SettingPageContent = ({
         />
       </div>
 
-      <p className="mt-2 text-sm/6 text-gray-600">
+      <p className="mt-2 text-sm/6 text-muted-foreground">
         Don't know how to find your Discord ID?{" "}
-        <Link href="#" className="text-brand-600 hover:text-brand-500">
+        <Link href="#" className="text-link hover:text-link">
           Learn how to obtain it here
         </Link>
         .

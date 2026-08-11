@@ -47,7 +47,7 @@ const DiscordMessage = ({
         <div className="w-full max-w-xl">
             <div className="flex items-center">
                 <p className="font-semibold text-white">{username}</p>
-                <span className="flex items-center justify-center ml-2 px-1.5 py-0.5 text-xs font-semibold bg-brand-600 text-white rounded-md">
+                <span className="flex items-center justify-center ml-2 px-1.5 py-0.5 text-xs font-semibold bg-primary text-white rounded-md">
                     <Check className="size-5 shrink-0"/>
                     APP
                 </span>

@@ -6,19 +6,11 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
 
-export const SignOutButton = ({
-  className,
-  size = "sm",
-  variant = "outline",
-}: {
-  className?: string
-  size?: "sm" | "lg" | "default" | "icon"
-  variant?: "outline" | "ghost" | "default" | "destructive" | "link" | "secondary"
-}) => {
+export const useSignOut = () => {
   const router = useRouter()
   const [isPending, setIsPending] = useState(false)
 
-  const handleSignOut = async () => {
+  const signOut = async () => {
     setIsPending(true)
 
     const { error } = await authClient.signOut()
@@ -29,18 +21,30 @@ export const SignOutButton = ({
       return
     }
 
-    // refresh() re-runs the server components that read the session, so the
-    // navbar and any protected page reflect the signed-out state immediately.
     router.push("/")
     router.refresh()
   }
+
+  return { signOut, isPending }
+}
+
+export const SignOutButton = ({
+  className,
+  size = "sm",
+  variant = "outline",
+}: {
+  className?: string
+  size?: "sm" | "lg" | "default" | "icon"
+  variant?: "outline" | "ghost" | "default" | "destructive" | "link" | "secondary"
+}) => {
+  const { signOut, isPending } = useSignOut()
 
   return (
     <Button
       size={size}
       variant={variant}
       className={className}
-      onClick={handleSignOut}
+      onClick={signOut}
       disabled={isPending}
     >
       {isPending ? "Signing out..." : "Sign Out"}

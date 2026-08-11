@@ -27,8 +27,6 @@ export const SignInForm = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
-  // `intent=upgrade` comes from the pricing page for signed-out visitors, and
-  // is forwarded so the dashboard opens Stripe checkout right after sign-in.
   const intent = searchParams.get("intent")
   const callbackUrl =
     searchParams.get("callbackUrl") ??
@@ -48,8 +46,6 @@ export const SignInForm = () => {
     })
 
     if (error) {
-      // Deliberately generic: distinguishing "no such user" from "wrong
-      // password" tells an attacker which emails are registered.
       toast.error(error.message ?? "Invalid email or password.")
       setIsLoading(false)
       return
@@ -78,7 +74,7 @@ export const SignInForm = () => {
                     autoComplete="email"
                     placeholder="you@example.com"
                     disabled={isLoading}
-                    className="h-12"
+                    className="h-10"
                     {...field}
                   />
                 </FormControl>
@@ -100,13 +96,13 @@ export const SignInForm = () => {
                       autoComplete="current-password"
                       placeholder="••••••••"
                       disabled={isLoading}
-                      className="h-12 pr-12"
+                      className="h-10 pr-10"
                       {...field}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-brand-900"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                       tabIndex={-1}
                       aria-label={
                         showPassword ? "Hide password" : "Show password"
@@ -125,17 +121,17 @@ export const SignInForm = () => {
             )}
           />
 
-          <Button className="h-12 w-full" type="submit" disabled={isLoading}>
+          <Button className="h-10 w-full" type="submit" disabled={isLoading}>
             {isLoading ? "Signing in..." : "Sign in"}
           </Button>
         </form>
       </Form>
 
-      <p className="text-center text-sm text-gray-600">
+      <p className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{" "}
         <Link
           href="/sign-up"
-          className="font-semibold text-brand-700 hover:underline"
+          className="font-semibold text-link hover:underline"
         >
           Sign up
         </Link>

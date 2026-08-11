@@ -3,7 +3,6 @@ import { Bebas_Neue, Inter, Roboto } from "next/font/google"
 import "./globals.css"
 import { cn } from "@/lib/utils"
 import { Providers } from "@/components/providers"
-import { Toaster } from "@/components/ui/sonner"
 
 const roboto = Roboto({
   weight: ["300","400","700"],
@@ -29,12 +28,15 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={cn(roboto.variable, bebas.variable)}>
-      <body className="min-h-[calc(100vh-1px)] font-sans bg-brand-50 text-brand-950 antialiased flex flex-col">
+    <html
+      lang="en"
+      className={cn(roboto.variable, bebas.variable)}
+      suppressHydrationWarning
+    >
+      <body className="min-h-[calc(100vh-1px)] font-sans bg-background text-foreground antialiased flex flex-col">
         <main className="relative flex flex-col flex-1">
           <Providers>{children}</Providers>
         </main>
-        <Toaster />
       </body>
     </html>
   )

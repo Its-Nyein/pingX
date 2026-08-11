@@ -25,18 +25,18 @@ const ApiKeySettings = ({ apiKey }: { apiKey: string }) => {
             <Button
               variant="ghost"
               onClick={copyApi}
-              className="p-1 w-10 focus:outline-hidden focus:ring-2 focus:ring-brand-500"
+              className="p-1 w-10 focus:outline-hidden focus:ring-2 focus:ring-ring"
             >
               {copySuccess ? (
-                <CheckIcon className="size-4 text-brand-900" />
+                <CheckIcon className="size-4 text-foreground" />
               ) : (
-                <ClipboardIcon className="size-4 text-brand-900" />
+                <ClipboardIcon className="size-4 text-foreground" />
               )}
             </Button>
           </div>
         </div>
 
-        <p className="flex mt-2 text-sm/6 text-gray-600 gap-2 items-center">
+        <p className="flex mt-2 text-sm/6 text-muted-foreground gap-2 items-center">
           <AlertTriangleIcon className="size-4 text-red-500" />
           Keep your key secret safe and do not share with others.
         </p>

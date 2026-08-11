@@ -23,7 +23,6 @@ import {
 } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import Heading from "@/components/heading"
 import {
   Table,
   TableBody,
@@ -48,7 +47,6 @@ export const CategoryPageContent = ({
     "today"
   )
 
-  // https://localhost:3000/dashboard/category/sale?page=1&limit=30
   const page = parseInt(searchParams.get("page") || "1", 10)
   const limit = parseInt(searchParams.get("limit") || "30", 10)
 
@@ -276,7 +274,7 @@ export const CategoryPageContent = ({
 
         <TabsContent value={activeTab}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-16">
-            <Card className="border-2 border-brand-700">
+            <Card className="border-2 border-primary">
               <div className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <p className="text-sm/6 font-medium">Total Events</p>
                 <BarChart className="size-4 text-muted-foreground" />
@@ -303,7 +301,7 @@ export const CategoryPageContent = ({
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div className="w-full flex flex-col gap-4">
-            <Heading className="text-3xl">Event overview</Heading>
+            <h2 className="text-lg font-semibold tracking-tight text-foreground">Event overview</h2>
           </div>
         </div>
 
@@ -332,7 +330,7 @@ export const CategoryPageContent = ({
                   <TableRow key={rowIndex}>
                     {columns.map((_, cellIndex) => (
                       <TableCell key={cellIndex}>
-                        <div className="h-4 w-full bg-gray-200 animate-pulse rounded" />
+                        <div className="h-4 w-full bg-recessed animate-pulse rounded" />
                       </TableCell>
                     ))}
                   </TableRow>

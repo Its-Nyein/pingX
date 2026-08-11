@@ -1,6 +1,5 @@
 "use client"
 
-import Heading from "@/components/heading"
 import { MaxWidthWrapper } from "@/components/max-width-wrapper"
 import { Button } from "@/components/ui/button"
 import { client } from "@/lib/client"
@@ -39,38 +38,40 @@ const Page = () => {
     }
   }
   return (
-    <div className="bg-brand-25 py-24 sm:py-32">
+    <div className="bg-background py-24 sm:py-32">
       <MaxWidthWrapper>
         <div className="mx-auto max-w-2xl sm:text-center">
-          <Heading className="text-center">Simple no-tricks pricing</Heading>
-          <p className="mt-6 text-base/7 text-gray-600 max-w-prose text-center text-pretty">
+          <h1 className="text-center text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+            Simple no-tricks pricing
+          </h1>
+          <p className="mt-6 text-base/7 text-muted-foreground max-w-prose text-center text-pretty">
             We hate subscriptions. And chances are, you do too. That's why we
             offer lifetime access to PingX for a one-time payment.
           </p>
         </div>
 
-        <div className="bg-white mx-auto mt-16 max-w-2xl rounded-3xl ring-1 ring-gray-200 sm:mt-20 lg:mx-0 lg:flex lg:max-w-none">
+        <div className="bg-card mx-auto mt-16 max-w-2xl rounded-3xl ring-1 ring-gray-200 sm:mt-20 lg:mx-0 lg:flex lg:max-w-none">
           <div className="p-8 sm:p-10 lg:flex-auto">
-            <h3 className="text-3xl font-heading font-semibold tracking-tight text-gray-900">
+            <h3 className="text-3xl font-heading font-semibold tracking-tight text-foreground">
               Lifetime access
             </h3>
 
-            <p className="mt-6 text-base/7 text-gray-600">
+            <p className="mt-6 text-base/7 text-muted-foreground">
               Invest once in PingX and transform how you monitor your SaaS
               forever. Get instant alerts, track critical metrics and never miss
               a beat in your business growth.
             </p>
             <div className="mt-10 flex items-center gap-x-4">
-              <h4 className="flex-none text-sm font-semibold leading-6 text-brand-600">
+              <h4 className="flex-none text-sm font-semibold leading-6 text-link">
                 What's included
               </h4>
-              <div className="h-px flex-auto bg-gray-100" />
+              <div className="h-px flex-auto bg-recessed" />
             </div>
 
-            <ul className="mt-8 grid grid-cols-1 gap-4 text-sm/6 text-gray-600 sm:grid-cols-2 sm:gap-6">
+            <ul className="mt-8 grid grid-cols-1 gap-4 text-sm/6 text-muted-foreground sm:grid-cols-2 sm:gap-6">
               {INCLUDED_FEATURES.map((feature) => (
                 <li key={feature} className="flex gap-3">
-                  <CheckIcon className="h-6 w-5 flex-none text-brand-700" />
+                  <CheckIcon className="h-6 w-5 flex-none text-link" />
                   {feature}
                 </li>
               ))}
@@ -78,16 +79,16 @@ const Page = () => {
           </div>
 
           <div className="-mt-2 p-2 lg:mt-0 lg:w-full lg:max-w-md lg:shrink-0">
-            <div className="rounded-2xl bg-gray-50 py-10 text-center ring-1 ring-inset ring-gray-900/5 lg:flex lg:flex-col lg:justify-center lg:py-16">
+            <div className="rounded-2xl bg-recessed py-10 text-center ring-1 ring-inset ring-gray-900/5 lg:flex lg:flex-col lg:justify-center lg:py-16">
               <div className="mx-auto max-w-xs py-8">
-                <p className="text-base font-semibold text-gray-600">
+                <p className="text-base font-semibold text-muted-foreground">
                   Pay once, own forever
                 </p>
                 <p className="mt-6 flex items-baseline justify-center gap-x-2">
-                  <span className="text-5xl font-bold tracking-tight text-gray-900">
+                  <span className="text-5xl font-bold tracking-tight text-foreground">
                     $10
                   </span>
-                  <span className="text-sm font-semibold leading-6 tracking-wide text-gray-600">
+                  <span className="text-sm font-semibold leading-6 tracking-wide text-muted-foreground">
                     USD
                   </span>
                 </p>
@@ -95,7 +96,7 @@ const Page = () => {
                 <Button onClick={handleGetAccess} className="mt-6 px-20">
                   Get PingX
                 </Button>
-                <p className="mt-6 text-xs leading-5 text-gray-600">
+                <p className="mt-6 text-xs leading-5 text-muted-foreground">
                   Secure payment. Start monitoring in minutes.
                 </p>
               </div>

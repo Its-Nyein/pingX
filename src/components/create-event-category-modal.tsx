@@ -45,17 +45,18 @@ export const CreateEventCategoryModal = ({children}: PropsWithChildren) => {
 
     return(
         <>
-            <div onClick={() => setIsOpen(true)}>
+
+            <div className="inline-flex" onClick={() => setIsOpen(true)}>
                 {children}
             </div>
 
-            <Modal showModal={isOpen} setShowModal={setIsOpen} className="max-w-xl p-8">
+            <Modal showModal={isOpen} setShowModal={setIsOpen} className="max-w-lg p-6">
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                     <div>
-                        <h2 className="text-lg/7 font-medium tracking-tight text-gray-950">
+                        <h2 className="text-lg font-semibold tracking-tight text-foreground">
                             Create Event Category
                         </h2>
-                        <p className="text-sm/6 text-gray-600">
+                        <p className="text-sm text-muted-foreground">
                             Create a new category to organize your events
                         </p>
                     </div>
@@ -71,8 +72,8 @@ export const CreateEventCategoryModal = ({children}: PropsWithChildren) => {
                                 className="w-full my-3"
                             />
                             {
-                                errors.name ? 
-                                    <p className="flex text-sm text-red-500 mt-1 gap-2">
+                                errors.name ?
+                                    <p className="flex text-sm text-destructive mt-1 gap-2">
                                         <CircleAlert className="size-4"/>
                                         {errors.name.message}
                                     </p> : null

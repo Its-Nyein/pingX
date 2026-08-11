@@ -1,4 +1,5 @@
-import DashboardPage from "@/components/dashboard-page";
+import { PageBody } from "@/components/shell/page-body";
+import { PageHeader } from "@/components/shell/page-header";
 import { db, eventCategories, events } from "@/db";
 import { getCurrentUser } from "@/lib/session";
 import { and, count, eq } from "drizzle-orm";
@@ -46,9 +47,16 @@ const Page = async (props: PageProps) => {
     const hasEvents = eventsCount > 0;
 
     return (
-        <DashboardPage title={`${category.name} events`}>
-            <CategoryPageContent hasEvents={hasEvents} category={category}/>
-        </DashboardPage>
+        <>
+            <PageHeader
+                title={category.name}
+                description="Events delivered in this category."
+            />
+
+            <PageBody>
+                <CategoryPageContent hasEvents={hasEvents} category={category}/>
+            </PageBody>
+        </>
     )
 }
 
