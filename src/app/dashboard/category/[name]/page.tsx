@@ -1,55 +1,49 @@
 import DashboardPage from "@/components/dashboard-page";
-import { db } from "@/db";
-import { currentUser } from "@clerk/nextjs/server";
+import { db, eventCategories, events } from "@/db";
+import { getCurrentUser } from "@/lib/session";
+import { and, count, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { CategoryPageContent } from "./category-page-content";
 
 interface PageProps {
-    params: {
+    params: Promise<{
         name: string | string[] | undefined;
-    }
+    }>
 }
 
-const Page = async ({params}: PageProps) => {
+const Page = async (props: PageProps) => {
+    const params = await props.params;
+
     if(typeof params.name !== 'string') {
         return notFound();
     }
 
-    const auth = await currentUser();
-    if(!auth) {
-        return notFound();
-    }
-
-    const user = await db.user.findUnique({
-        where: {
-            externalId: auth.id
-        }
-    })
+    const user = await getCurrentUser();
     if(!user) {
         return notFound();
     }
 
-    const category = await db.eventCategory.findUnique({
-        where: {
-            name_userId: {
-                name: params.name,
-                userId: user.id
-            }
-        },
-        include: {
-            _count: {
-                select: {
-                    events: true
-                }
-            }
-        }
-    })
+    const [category] = await db
+        .select()
+        .from(eventCategories)
+        .where(
+            and(
+                eq(eventCategories.name, params.name),
+                eq(eventCategories.userId, user.id)
+            )
+        )
+        .limit(1)
 
     if(!category) {
         return notFound();
     }
 
-    const hasEvents = category._count.events > 0;
+    const [{ value: eventsCount }] = await db
+        .select({ value: count() })
+        .from(events)
+        .where(eq(events.eventCategoryId, category.id))
+
+    const hasEvents = eventsCount > 0;
 
     return (
         <DashboardPage title={`${category.name} events`}>

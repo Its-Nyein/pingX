@@ -57,7 +57,7 @@ export const DashboardContent = () => {
                         >
                             <div className="absolute inset-px z-0 rounded-lg bg-white"/>
 
-                            <div className="pointer-events-none z-0 absolute rounded-lg shadow-sm inset-px transition-all duration-300 group-hover:shadow-md ring-1 ring-black/5"/>
+                            <div className="pointer-events-none z-0 absolute rounded-lg shadow-xs inset-px transition-all duration-300 group-hover:shadow-md ring-1 ring-black/5"/>
 
                             <div className="relative z-10 p-6">
                                 <div className="flex items-center mb-6 gap-4">

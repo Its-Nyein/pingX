@@ -1,11 +1,12 @@
-import { db } from "@/db"
+import { db, users } from "@/db"
 import { stripe } from "@/lib/stripe"
+import { eq } from "drizzle-orm"
 import { headers } from "next/headers"
 import Stripe from "stripe"
 
 export async function POST(req: Request) {
   const body = await req.text()
-  const signature = headers().get("stripe-signature")
+  const signature = (await headers()).get("stripe-signature")
 
   const event = stripe.webhooks.constructEvent(
     body,
@@ -21,10 +22,7 @@ export async function POST(req: Request) {
       return new Response("Invalid Metadata", { status: 400 })
     }
 
-    await db.user.update({
-      where: { id: userId },
-      data: { plan: "PRO" },
-    })
+    await db.update(users).set({ plan: "PRO" }).where(eq(users.id, userId))
   }
 
   return new Response("OK")

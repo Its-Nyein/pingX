@@ -1,25 +1,9 @@
 import DashboardPage from "@/components/dashboard-page"
-import { db } from "@/db"
-import { currentUser } from "@clerk/nextjs/server"
-import { redirect } from "next/navigation"
+import { requireUser } from "@/lib/session"
 import ApiKeySettings from "./api-key-settings"
 
 const Page = async () => {
-  const auth = await currentUser()
-
-  if (!auth) {
-    redirect("/sign-in")
-  }
-
-  const user = await db.user.findUnique({
-    where: {
-      externalId: auth.id,
-    },
-  })
-
-  if (!user) {
-    redirect("/sign-in")
-  }
+  const user = await requireUser()
 
   return (
     <DashboardPage title="API Key">

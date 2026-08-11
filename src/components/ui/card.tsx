@@ -23,7 +23,7 @@ export const Card = ({
         {children}
       </div>
       <div className="absolute z-0 inset-px rounded-lg bg-white" />
-      <div className="pointer-events-none z-0 absolute inset-px rounded-lg shadow-sm ring-1 ring-black/5" />
+      <div className="pointer-events-none z-0 absolute inset-px rounded-lg shadow-xs ring-1 ring-black/5" />
     </div>
   )
 }

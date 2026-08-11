@@ -1,13 +1,14 @@
 import { FREE_QUOTA, PRO_QUOTA } from "@/config";
-import { db } from "@/db";
+import { db, events, quotas, users } from "@/db";
 import { DiscordClient } from "@/lib/discord-client";
 import { EVENT_CATEGORY_VALIDATOR } from "@/lib/validators/validator";
+import { and, eq, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { unknown, z } from "zod";
 
 const REQUEST_VALIDATOR = z.object({
     category: EVENT_CATEGORY_VALIDATOR,
-    data: z.record(z.string().or(z.number()).or(z.boolean())).optional(),
+    data: z.record(z.string(), z.string().or(z.number()).or(z.boolean())).optional(),
     description: z.string().optional(),
 }).strict();
 
@@ -27,11 +28,11 @@ export const POST = async(req: NextRequest) => {
             return NextResponse.json({ message: "Invalid API key" }, { status: 401 });
         }
 
-        const user = await db.user.findUnique({
-            where: {
-                apiKey,
-            },
-            include: {
+        // Replaces `include: { eventCategories: true }` via the relational
+        // query API, so `user.eventCategories` keeps the same shape.
+        const user = await db.query.users.findFirst({
+            where: eq(users.apiKey, apiKey),
+            with: {
                 eventCategories: true
             }
         })
@@ -49,13 +50,17 @@ export const POST = async(req: NextRequest) => {
         const currentMonth = currentData.getMonth() + 1;
         const currentYear = currentData.getFullYear();
 
-        const quota = await db.quota.findUnique({
-            where: {
-                userId: user.id,
-                month: currentMonth,
-                year: currentYear
-            }
-        })
+        const [quota] = await db
+            .select()
+            .from(quotas)
+            .where(
+                and(
+                    eq(quotas.userId, user.id),
+                    eq(quotas.month, currentMonth),
+                    eq(quotas.year, currentYear)
+                )
+            )
+            .limit(1)
 
         const quotaLimit = user.plan === 'FREE' ? FREE_QUOTA.maxEventsPerMonth : PRO_QUOTA.maxEventsPerMonth;
 
@@ -99,39 +104,47 @@ export const POST = async(req: NextRequest) => {
             )
         }
 
-        const event = await db.event.create({
-            data: {
+        const [event] = await db
+            .insert(events)
+            .values({
                 name: category.name,
                 formattedMessage: `${eventData.title}\n\n${eventData.description}`,
                 userId: user.id,
                 data: validationResult.data || {},
                 eventCategoryId: category.id
-            }
-        })
+            })
+            .returning()
 
         try {
             await discord.sendEmbed(dmChannel.id, eventData);
 
-            await db.event.update({
-                where: {id: event.id},
-                data: { deliveryStatus: 'DELIVERED'}
-            })
+            await db
+                .update(events)
+                .set({ deliveryStatus: 'DELIVERED' })
+                .where(eq(events.id, event.id))
 
-            await db.quota.upsert({
-                where: {userId: user.id, month: currentMonth, year: currentYear},
-                update: {count: {increment: 1}},
-                create: {
+            // The conflict target is "userId" alone, not (userId, month, year):
+            // a user has exactly one quota row, incremented across months
+            // rather than one row per month. That is the original behaviour and
+            // is preserved. The unique constraint it needs is created by
+            // drizzle/migrations/0000_init.sql.
+            await db
+                .insert(quotas)
+                .values({
                     userId: user.id,
                     month: currentMonth,
                     year: currentYear,
                     count: 1
-                }
-            })
+                })
+                .onConflictDoUpdate({
+                    target: quotas.userId,
+                    set: { count: sql`${quotas.count} + 1` }
+                })
         } catch (error) {
-            await db.event.update({
-                where: {id: event.id},
-                data: { deliveryStatus: 'FAILED'}
-            })
+            await db
+                .update(events)
+                .set({ deliveryStatus: 'FAILED' })
+                .where(eq(events.id, event.id))
 
             console.log(error);
             return NextResponse.json({
