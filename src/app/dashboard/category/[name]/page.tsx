@@ -1,6 +1,6 @@
 import DashboardPage from "@/components/dashboard-page";
-import { db, eventCategories, events, users } from "@/db";
-import { currentUser } from "@clerk/nextjs/server";
+import { db, eventCategories, events } from "@/db";
+import { getCurrentUser } from "@/lib/session";
 import { and, count, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { CategoryPageContent } from "./category-page-content";
@@ -18,16 +18,7 @@ const Page = async (props: PageProps) => {
         return notFound();
     }
 
-    const auth = await currentUser();
-    if(!auth) {
-        return notFound();
-    }
-
-    const [user] = await db
-        .select()
-        .from(users)
-        .where(eq(users.externalId, auth.id))
-        .limit(1)
+    const user = await getCurrentUser();
     if(!user) {
         return notFound();
     }
@@ -47,7 +38,6 @@ const Page = async (props: PageProps) => {
         return notFound();
     }
 
-    // Prisma's `_count: { events: true }` include, as its own aggregate.
     const [{ value: eventsCount }] = await db
         .select({ value: count() })
         .from(events)

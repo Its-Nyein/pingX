@@ -1,15 +1,16 @@
 # pingX
 
 Next.js 16 App Router SaaS that turns API calls into Discord notifications.
-Clerk for auth, Hono for the API layer, Drizzle ORM on Neon Postgres, Stripe for
-billing.
+Better Auth for auth, Hono for the API layer, Drizzle ORM on Neon Postgres,
+Stripe for billing.
 
 ## Getting started
 
 ```bash
 npm install
 cp .env.example .env
-# fill in .env, then:
+# fill in .env, then create the schema:
+npm run db:migrate
 npm run dev
 ```
 
@@ -17,6 +18,46 @@ Open [http://localhost:3000](http://localhost:3000).
 
 `STRIPE_SECRET_KEY` must be set for `npm run build` as well as for `npm run dev`
 — the Stripe client is constructed at module scope and throws on an empty key.
+
+## Auth
+
+Better Auth, with email/password plus Google and GitHub OAuth.
+
+```
+src/lib/auth.ts          server instance and config
+src/lib/auth-client.ts   browser client (authClient.useSession, signIn, signOut)
+src/lib/session.ts       server helpers: getSession, getCurrentUser, requireUser
+src/app/api/auth/[...all]/route.ts   mounts the Better Auth handler
+src/proxy.ts             cheap cookie gate on /dashboard
+src/components/auth/     sign-in and sign-up UI
+```
+
+Set `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL`. OAuth sign-in fails at runtime
+until the Google and GitHub client IDs and secrets are set; register the
+callback URL `<BETTER_AUTH_URL>/api/auth/callback/<provider>` with each.
+
+### One user table
+
+pingX's application columns (`quotoaLimit`, `plan`, `apiKey`, `discordId`) live
+on Better Auth's `user` table rather than in a separate table. That means a
+session read already carries them and no join or second query is needed:
+
+```ts
+const user = await requireUser()
+user.plan     // "FREE" | "PRO"
+user.apiKey
+```
+
+**These columns are declared in two places** — as Drizzle columns in
+`src/db/schema/users.ts`, and as `user.additionalFields` in `src/lib/auth.ts`.
+Adding one without the other means the column exists but the auth layer cannot
+read or write it. They are marked `input: false`, so a client cannot set its own
+plan or quota at signup.
+
+Route protection is layered: `src/proxy.ts` only checks that a session cookie is
+present, which is cheap enough to run on every navigation, and each page does
+the authoritative `getSession` check before rendering. Do not treat the proxy as
+the security boundary.
 
 ## Database
 
@@ -57,30 +98,24 @@ Review generated SQL before applying it to a database that holds real data.
 
 ### Schema conventions
 
-The tables were originally created by Prisma, so every identifier in the
-database is quoted and mixed-case (`"User"`, `"eventCategoryId"`,
-`"User_email_key"`). The schema files therefore name every table, column, index,
-unique constraint and foreign key explicitly rather than relying on Drizzle's
-implicit mapping. Keep it that way — an implicit name that happens to match
-today will silently drift the moment a TypeScript key is renamed.
+Better Auth's tables (`user`, `session`, `account`, `verification`) are
+lowercase singular, because the adapter addresses them by model name. The
+application tables (`EventCategory`, `Event`, `Quota`) keep their original
+mixed-case names. Column names are always spelled out explicitly rather than
+relying on implicit mapping, so renaming a TypeScript key cannot silently
+rename a column.
 
-Two consequences worth knowing:
+Worth knowing:
 
-- `quotoaLimit` on `"User"` is misspelled in the database. The typo is the real
-  column name and is reproduced deliberately.
-- `updatedAt` columns have no database default. Prisma managed them in the
-  application, so they use `$defaultFn` + `$onUpdate` to match.
+- `quotoaLimit` is misspelled. That is the real column name; renaming it is a
+  separate change.
+- `updatedAt` columns have no database default — they use `$defaultFn` +
+  `$onUpdate` and are managed in the application.
+- `Quota.userId` is unique: one quota row per user, incremented across months.
+  `year`/`month` record when it was last reset, they are not part of the key.
+- Every foreign key to `user` cascades on delete.
 
-`drizzle/migrations/0000_baseline_existing_schema.sql` is a **baseline**
-describing objects that already exist. Do not apply it to the live database.
-See `drizzle/README.md`.
-
-### Outstanding migration
-
-`drizzle/manual/0001_add_quota_userid_unique.sql` has **not** been applied. Until
-it is, the quota upsert in `src/app/api/v1/events/route.ts` will fail with
-Postgres error 42P10. Read the file before running it — it has a pre-check that
-must return zero rows.
+See `drizzle/README.md` for details.
 
 ## Learn more
 

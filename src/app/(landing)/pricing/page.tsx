@@ -4,13 +4,14 @@ import Heading from "@/components/heading"
 import { MaxWidthWrapper } from "@/components/max-width-wrapper"
 import { Button } from "@/components/ui/button"
 import { client } from "@/lib/client"
-import { useUser } from "@clerk/nextjs"
+import { authClient } from "@/lib/auth-client"
 import { useMutation } from "@tanstack/react-query"
 import { CheckIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 const Page = () => {
-  const { user } = useUser()
+  const { data: session } = authClient.useSession()
+  const user = session?.user
   const router = useRouter()
 
   const INCLUDED_FEATURES = [

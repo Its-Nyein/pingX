@@ -1,7 +1,5 @@
 import DashboardPage from "@/components/dashboard-page"
-import { db, users } from "@/db"
-import { eq } from "drizzle-orm"
-import { currentUser } from "@clerk/nextjs/server"
+import { requireUser } from "@/lib/session"
 import { redirect } from "next/navigation"
 import { DashboardContent } from "./dashboard-content"
 import { CreateEventCategoryModal } from "@/components/create-event-category-modal"
@@ -17,21 +15,8 @@ interface PageProps {
 }
 
 const Page = async (props: PageProps) => {
-  const searchParams = await props.searchParams;
-  const auth = await currentUser()
-  if (!auth) {
-    redirect("/sign-in")
-  }
-
-  const [user] = await db
-    .select()
-    .from(users)
-    .where(eq(users.externalId, auth.id))
-    .limit(1)
-
-  if (!user) {
-    redirect("/welcome")
-  }
+  const searchParams = await props.searchParams
+  const user = await requireUser()
 
   const intent = searchParams.intent
 

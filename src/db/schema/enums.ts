@@ -1,15 +1,11 @@
 import { pgEnum } from "drizzle-orm/pg-core"
 
-/**
- * Postgres enum types created by the original Prisma migration.
- * Names and member order must match the live database exactly.
- */
+/** Billing tier. Mirrored in `user.additionalFields.plan` in src/lib/auth.ts. */
 export const planEnum = pgEnum("Plan", ["FREE", "PRO"])
 
+/** Delivery outcome for a single event. */
 export const statusEnum = pgEnum("Status", ["PENDING", "DELIVERED", "FAILED"])
 
-/** Replaces the `Plan` type previously imported from @prisma/client. */
 export type Plan = (typeof planEnum.enumValues)[number]
 
-/** Replaces the `Status` type previously imported from @prisma/client. */
 export type Status = (typeof statusEnum.enumValues)[number]

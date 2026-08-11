@@ -1,6 +1,6 @@
 import { db, users } from "@/db"
 import { j } from "./__internals/j"
-import { currentUser } from "@clerk/nextjs/server"
+import { auth } from "@/lib/auth"
 import { eq } from "drizzle-orm"
 import { HTTPException } from "hono/http-exception"
 
@@ -19,16 +19,22 @@ const authMiddleware = j.middleware(async ({ c, next }) => {
     if (user) return next({ user })
   }
 
-  const auth = await currentUser()
+  // Falls back to the browser session. Better Auth reads its cookie off the
+  // request headers, which Hono exposes directly - there is no need to go
+  // through next/headers here.
+  const session = await auth.api.getSession({ headers: c.req.raw.headers })
 
-  if (!auth) {
+  if (!session) {
     throw new HTTPException(401, { message: "Unauthorized" })
   }
 
+  // The session user is Better Auth's shape. Downstream procedures expect the
+  // full database row (they read quotoaLimit and other columns), so it is
+  // loaded by id rather than passed through.
   const [user] = await db
     .select()
     .from(users)
-    .where(eq(users.externalId, auth.id))
+    .where(eq(users.id, session.user.id))
     .limit(1)
 
   if (!user) {

@@ -123,16 +123,11 @@ export const POST = async(req: NextRequest) => {
                 .set({ deliveryStatus: 'DELIVERED' })
                 .where(eq(events.id, event.id))
 
-            // REQUIRES drizzle/manual/0001_add_quota_userid_unique.sql TO BE
-            // APPLIED FIRST. Postgres raises 42P10 for ON CONFLICT against a
-            // column with no unique index, and the live database is currently
-            // missing "Quota_userId_key" - see src/db/schema/quotas.ts.
-            //
-            // The conflict target is "userId" alone, not (userId, month, year),
-            // because that is what the Prisma upsert did: Quota.userId was the
-            // only key it treated as unique. That means a user keeps ONE quota
-            // row that is incremented across months rather than one row per
-            // month. Preserved deliberately - this is a refactor, not a fix.
+            // The conflict target is "userId" alone, not (userId, month, year):
+            // a user has exactly one quota row, incremented across months
+            // rather than one row per month. That is the original behaviour and
+            // is preserved. The unique constraint it needs is created by
+            // drizzle/migrations/0000_init.sql.
             await db
                 .insert(quotas)
                 .values({

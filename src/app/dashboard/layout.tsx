@@ -3,7 +3,7 @@
 import { buttonVariants } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
 import { cn } from "@/lib/utils"
-import { UserButton } from "@clerk/nextjs"
+import { UserMenu } from "@/components/user-menu"
 import { Gem, Home, Key, LucideIcon, Menu, Settings, X } from "lucide-react"
 import Link from "next/link"
 import { PropsWithChildren, useState } from "react"
@@ -81,14 +81,7 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
       <div className="flex flex-col">
         <hr className="my-4 md:my-6 w-full h-px bg-gray-100" />
 
-        <UserButton
-          showName
-          appearance={{
-            elements: {
-              userButtonBox: "flex-row-reverse",
-            },
-          }}
-        />
+        <UserMenu />
       </div>
     </div>
   )

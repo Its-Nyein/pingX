@@ -1,22 +1,15 @@
 import { createId } from "@paralleldrive/cuid2"
-import {
-  foreignKey,
-  index,
-  jsonb,
-  pgTable,
-  text,
-  timestamp,
-} from "drizzle-orm/pg-core"
+import { index, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core"
 
 import { statusEnum } from "./enums"
 import { eventCategories } from "./event-categories"
 import { users } from "./users"
 
 /**
- * Mirrors the "Event" table.
+ * A single delivered (or attempted) notification.
  *
- * `eventCategoryId` is nullable and its foreign key is ON DELETE SET NULL,
- * which is what lets a category be deleted while its events are retained.
+ * `eventCategoryId` is nullable and set null on delete, so deleting a category
+ * keeps its history rather than destroying it.
  */
 export const events = pgTable(
   "Event",
@@ -28,8 +21,13 @@ export const events = pgTable(
     data: jsonb("data").notNull(),
     formattedMessage: text("formattedMessage").notNull(),
     deliveryStatus: statusEnum("deliveryStatus").default("PENDING").notNull(),
-    userId: text("userId").notNull(),
-    eventCategoryId: text("eventCategoryId"),
+    userId: text("userId")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    eventCategoryId: text("eventCategoryId").references(
+      () => eventCategories.id,
+      { onDelete: "set null" }
+    ),
     createdAt: timestamp("createdAt", { precision: 3, mode: "date" })
       .defaultNow()
       .notNull(),
@@ -38,25 +36,8 @@ export const events = pgTable(
       .$defaultFn(() => new Date())
       .$onUpdate(() => new Date()),
   },
-  (table) => [
-    index("Event_createdAt_idx").on(table.createdAt),
-    foreignKey({
-      name: "Event_userId_fkey",
-      columns: [table.userId],
-      foreignColumns: [users.id],
-    })
-      .onDelete("restrict")
-      .onUpdate("cascade"),
-    foreignKey({
-      name: "Event_eventCategoryId_fkey",
-      columns: [table.eventCategoryId],
-      foreignColumns: [eventCategories.id],
-    })
-      .onDelete("set null")
-      .onUpdate("cascade"),
-  ]
+  (table) => [index("Event_createdAt_idx").on(table.createdAt)]
 )
 
-/** Replaces the `Event` type previously imported from @prisma/client. */
 export type Event = typeof events.$inferSelect
 export type NewEvent = typeof events.$inferInsert
