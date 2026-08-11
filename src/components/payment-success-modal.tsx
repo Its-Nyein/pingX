@@ -54,7 +54,7 @@ export const PaymentSuccessModal = () => {
             <div className="relative aspect-video border border-border w-full overflow-hidden rounded-lg bg-recessed">
               <img
                 src="/brand-asset-heart.png"
-                className="h-full w-full object-cover"
+                className="size-full object-cover"
                 alt="Payment success"
               />
             </div>

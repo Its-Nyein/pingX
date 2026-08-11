@@ -2,21 +2,22 @@ import { PropsWithChildren } from "react"
 import { Icons } from "./icons"
 import { Cog, Gift, Headphones, HelpCircle, Inbox, Menu, Mic, Phone, Pin, PlusCircle, Search, Smile, Sticker, UserCircle, Video } from "lucide-react"
 import Image from "next/image"
+import { PINGX_AVATAR, avatarUrl } from "@/lib/avatar"
 
 const MockDiscordUI = ({children} : PropsWithChildren) => {
   return (
-    <div className="flex min-h-[800px] w-full max-w-[1200px] bg-discord-background overflow-hidden shadow-lg text-white rounded-lg">
+    <div className="flex min-h-130 w-full max-w-300 overflow-hidden rounded-lg bg-discord-background text-white sm:min-h-160 lg:min-h-180 sm:rounded-xl">
 
-        <div className="hidden md:flex w-[72px] bg-[#202225] py-3 flex-col items-center">
+        <div className="hidden md:flex w-18 bg-[#202225] py-3 flex-col items-center">
             <div className="size-12 bg-discord-brand-color rounded-2xl flex items-center justify-center mb-2 hover:rounded-xl transition-all duration-200">
                 <Icons.discord className="size-3/5 text-white"/>
             </div>
 
-            <div className="w-8 h-[2px] rounded-full bg-discord-background my-2"/>
+            <div className="my-2 h-px w-8 rounded-full bg-white/10"/>
 
             {[...Array(5)].map((_, i) => (
                 <div key={i} className="size-12 rounded-3xl bg-discord-background flex items-center justify-center mb-3 hover:rounded-xl transition-all duration-200 hover:bg-discord-brand-color cursor-not-allowed">
-                    <span className="text-lg text-gray-400 font-semibold">
+                    <span className="text-sm font-semibold text-[#b9bbbe]">
                         {String.fromCharCode(65 + i)}
                     </span>
                 </div>
@@ -27,21 +28,21 @@ const MockDiscordUI = ({children} : PropsWithChildren) => {
             </div>
         </div>
 
-        <div className="hidden md:flex flex-col bg-[#2f3136]">
+        <div className="hidden w-60 shrink-0 flex-col bg-[#2f3136] md:flex">
             <div className="px-4 h-16 border-b border-[#202225] flex items-center shadow-xs">
-                <div className="w-full h-8 bg-[#202225] text-sm rounded flex items-center justify-center px-2 text-gray-500 cursor-not-allowed">
+                <div className="w-full h-8 bg-[#202225] text-sm rounded flex items-center px-2 text-[#72767d] cursor-not-allowed">
                     Find or start a conversation
                 </div>
             </div>
 
             <div className="flex-1 overflow-y-auto pt-4">
                 <div className="px-2 mb-4">
-                    <div className="flex text-sm px-2 py-1.5 items-center hover:bg-[#393c43] text-discord-text cursor-not-allowed">
-                        <UserCircle className="mr-4 size-8 text-[#b9bbbe]"/>
+                    <div className="flex cursor-not-allowed items-center rounded px-2 py-1.5 text-sm text-discord-text hover:bg-[#393c43]">
+                        <UserCircle className="mr-3 size-5 text-[#b9bbbe]"/>
                         <span className="text-sm font-medium">Friends</span>
                     </div>
-                    <div className="flex text-sm px-2 py-1.5 items-center hover:bg-[#393c43] text-discord-text cursor-not-allowed">
-                        <Inbox className="mr-4 size-8 text-[#b9bbbe]"/>
+                    <div className="flex cursor-not-allowed items-center rounded px-2 py-1.5 text-sm text-discord-text hover:bg-[#393c43]">
+                        <Inbox className="mr-3 size-5 text-[#b9bbbe]"/>
                         <span className="text-sm font-medium">Nitro</span>
                     </div>
                 </div>
@@ -52,7 +53,7 @@ const MockDiscordUI = ({children} : PropsWithChildren) => {
                     </h3>
                     <div className="flex items-center px-2 py-1.5 rounded-md bg-[#393c43] text-white cursor-pointer">
                         <Image
-                          src="/brand-asset-profile-avatar.jpg"
+                          src={PINGX_AVATAR}
                           width={32}
                           height={32}
                           alt="pingX avatar"
@@ -65,9 +66,15 @@ const MockDiscordUI = ({children} : PropsWithChildren) => {
                         {[...Array(4)].map((_, i) => (
                             <div
                             key={i}
-                            className="flex items-center px-2 py-1.5 rounded text-gray-600 cursor-not-allowed"
+                            className="flex cursor-not-allowed items-center rounded px-2 py-1.5 text-[#72767d]"
                             >
-                            <div className="size-8 rounded-full bg-discord-background mr-3" />
+                            <Image
+                              src={avatarUrl(`pingx-user-${i + 1}`)}
+                              alt=""
+                              width={32}
+                              height={32}
+                              className="mr-3 size-8 rounded-full bg-white/5 object-cover"
+                            />
                             <span className="font-medium">User {i + 1}</span>
                             </div>
                         ))}
@@ -76,7 +83,13 @@ const MockDiscordUI = ({children} : PropsWithChildren) => {
             </div>
 
             <div className="p-2 bg-[#292b2f] flex items-center">
-                <div className="size-8 rounded-full bg-primary mr-2" />
+                <Image
+                  src={PINGX_AVATAR}
+                  width={32}
+                  height={32}
+                  alt=""
+                  className="mr-2 size-8 rounded-full object-cover"
+                />
                 <div className="flex-1">
                     <p className="text-sm font-medium text-white">ping_X</p>
                     <p className="text-xs text-[#b9bbbe] flex items-center">@ping_x</p>
@@ -100,7 +113,7 @@ const MockDiscordUI = ({children} : PropsWithChildren) => {
                 <div className="flex items-center">
                     <div className="relative">
                         <Image
-                          src="/brand-asset-profile-avatar.jpg"
+                          src={PINGX_AVATAR}
                           alt="pingX avatar"
                           width={40}
                           height={40}
@@ -122,8 +135,45 @@ const MockDiscordUI = ({children} : PropsWithChildren) => {
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 bg-discord-background flex flex-col-reverse">
-                {children}
+            <div className="flex flex-1 flex-col overflow-y-auto bg-discord-background">
+                <div className="px-4 pb-2 pt-6">
+                    <Image
+                      src={PINGX_AVATAR}
+                      alt=""
+                      width={64}
+                      height={64}
+                      className="mb-3 size-16 rounded-full object-cover"
+                    />
+                    <h2 className="text-2xl font-bold text-white">ping_X</h2>
+                    <p className="mt-1 text-sm text-[#b9bbbe]">
+                        This is the beginning of your direct message history with{" "}
+                        <span className="font-medium text-white">@ping_X</span>.
+                    </p>
+                </div>
+
+                <div className="flex items-center gap-3 px-4 py-3">
+                    <span className="h-px flex-1 bg-white/10" />
+                    <span className="text-[11px] font-semibold text-[#b9bbbe]">
+                        Today
+                    </span>
+                    <span className="h-px flex-1 bg-white/10" />
+                </div>
+
+                <div className="flex flex-1 flex-col-reverse p-2">
+                    {children}
+                </div>
+
+                <div className="flex items-center gap-2 px-4 pb-2 text-xs text-discord-timestamp">
+                    <span className="flex gap-0.5">
+                        <span className="size-1 animate-bounce rounded-full bg-[#b9bbbe] [animation-delay:-0.3s]" />
+                        <span className="size-1 animate-bounce rounded-full bg-[#b9bbbe] [animation-delay:-0.15s]" />
+                        <span className="size-1 animate-bounce rounded-full bg-[#b9bbbe]" />
+                    </span>
+                    <span>
+                        <span className="font-medium text-[#b9bbbe]">ping_X</span> is
+                        watching your events
+                    </span>
+                </div>
             </div>
 
             <div className="p-4">

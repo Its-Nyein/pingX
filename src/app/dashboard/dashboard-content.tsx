@@ -37,7 +37,7 @@ export const DashboardContent = () => {
 
     if(isEventCategoryLoading) {
         return (
-            <div className="flex flex-1 justify-center items-center h-full w-full">
+            <div className="flex flex-1 justify-center items-center size-full">
                 <LoadingSpinner/>
             </div>
         )

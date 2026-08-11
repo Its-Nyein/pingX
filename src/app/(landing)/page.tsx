@@ -1,12 +1,98 @@
 import MockDiscordUI from "@/components/mock-discord-ui"
 import Button from "../../components/button"
 import { MaxWidthWrapper } from "../../components/max-width-wrapper"
-import { Check } from "lucide-react"
+import {
+  AlertTriangle,
+  Check,
+  CreditCard,
+  TrendingUp,
+  UserPlus,
+} from "lucide-react"
+import Link from "next/link"
 import { AnimatedList } from "@/components/ui/animated-list"
 import DiscordMessage from "@/components/discord-message"
-import Image from "next/image"
+import { PINGX_AVATAR } from "@/lib/avatar"
+import { cn } from "@/lib/utils"
+import type { ComponentType, ReactNode } from "react"
 import { PrismLight as SyntaxHighlighter } from "react-syntax-highlighter"
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism"
+
+const FEED = [
+  {
+    icon: UserPlus,
+    tint: "bg-success-tint text-success",
+    title: "New user signed up",
+    meta: "nyeindev@gmail.com",
+    time: "12:45",
+  },
+  {
+    icon: CreditCard,
+    tint: "bg-warning-tint text-warning",
+    title: "Payment received",
+    meta: "$10.00 · PRO plan",
+    time: "01:00",
+  },
+  {
+    icon: TrendingUp,
+    tint: "bg-info-tint text-link",
+    title: "Revenue milestone",
+    meta: "$5,000 MRR · +8.2%",
+    time: "05:11",
+  },
+  {
+    icon: AlertTriangle,
+    tint: "bg-danger-tint text-danger",
+    title: "Quota exceeded",
+    meta: "100 / 100 events used",
+    time: "06:30",
+  },
+]
+
+const EVENT_TYPES = [
+  "sale",
+  "signup",
+  "churn",
+  "refund",
+  "milestone",
+  "error",
+  "invite",
+  "upgrade",
+  "quota",
+]
+
+const PROPERTIES = [
+  { key: "plan", value: '"PRO"', accent: true },
+  { key: "amount", value: "52.99", accent: false },
+  { key: "email", value: '"pingx@..."', accent: true },
+  { key: "seats", value: "12", accent: false },
+]
+
+const BentoCard = ({
+  title,
+  description,
+  className,
+  children,
+}: {
+  title: string
+  description: string
+  className?: string
+  children: ReactNode
+}) => (
+  <div
+    className={cn(
+      "flex flex-col rounded-lg border border-border bg-card p-6 sm:p-8",
+      className
+    )}
+  >
+    <p className="text-lg font-semibold tracking-tight text-foreground">
+      {title}
+    </p>
+    <p className="mt-2 max-w-lg text-sm leading-relaxed text-muted-foreground">
+      {description}
+    </p>
+    <div className="mt-6 flex-1">{children}</div>
+  </div>
+)
 
 const page = () => {
   const codeSnippet = `await fetch("https://ping-x.netlify.app/api/v1/events", {
@@ -26,62 +112,89 @@ const page = () => {
 
   return (
     <>
-      <section>
-        <MaxWidthWrapper className="text-center py-20 sm:py-28 bg-background">
-          <div className="relative mx-auto text-center flex flex-col items-center gap-10">
-            <div>
-              <h1 className="text-3xl font-semibold tracking-tight text-foreground text-pretty sm:text-5xl">
-                <span>Real-Time Saas Insights,</span>
-                <br />
-                <span className="relative bg-linear-to-r from-primary to-primary text-transparent bg-clip-text">
-                  Delivered to Your Discord
-                </span>
-              </h1>
-            </div>
+      <section className="relative overflow-hidden bg-background">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-1/2 top-0 size-208 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,var(--color-primary)_0%,transparent_60%)] opacity-10 blur-3xl"
+        />
 
-            <p className="text-base/7 text-muted-foreground max-w-prose text-center text-pretty">
-              pingX is easiest way to monitor your Saas. Get instant
+        <MaxWidthWrapper className="relative py-20 sm:py-28">
+          <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
+              <span className="size-1.5 rounded-full bg-cloudflare-orange" />
+              Real-time event monitoring
+            </span>
+
+            <h1 className="mt-6 text-4xl font-semibold tracking-tight text-balance text-foreground sm:text-6xl">
+              Real-Time SaaS Insights,
+              <br />
+              <span className="bg-linear-to-r from-primary to-chart-3 bg-clip-text text-transparent">
+                Delivered to Your Discord
+              </span>
+            </h1>
+
+            <p className="mt-5 max-w-xl text-lg leading-relaxed text-pretty text-muted-foreground">
+              pingX is the easiest way to monitor your SaaS. Get instant
               notifications for{" "}
-              <span className="font-semibold text-muted-foreground">
+              <span className="font-medium text-foreground">
                 sales, new users or any other event
               </span>{" "}
-              sent directly to your discord.
+              sent directly to your Discord.
             </p>
 
-            <ul className="text-base/7 text-muted-foreground space-y-2 flex flex-col items-start text-left">
+            <ul className="mt-8 flex flex-col items-start gap-2.5 text-left">
               {[
-                "Real-Time Discord alerts for critical events",
+                "Real-time Discord alerts for critical events",
                 "Buy once, use forever",
                 "Track sales, new users or any other events",
-              ].map((item, index) => (
-                <li key={index} className="flex gap-1.5 items-center text-left">
-                  <Check className="size-5 shrink-0 text-blue-700" />
+              ].map((item) => (
+                <li
+                  key={item}
+                  className="flex items-center gap-2.5 text-base text-muted-foreground"
+                >
+                  <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-success-tint">
+                    <Check className="size-3 text-success" />
+                  </span>
                   {item}
                 </li>
               ))}
             </ul>
 
-            <div className="w-full max-w-80">
+            <div className="mt-10 flex w-full flex-col items-center gap-3 sm:w-auto sm:flex-row">
               <Button
                 href="/sign-up"
-                className="h-14 w-full relative z-10 text-base shadow-lg transition-shadow hover:shadow-xl"
+                className="h-12 w-full justify-center text-base sm:w-auto"
               >
                 Start For Free Today
               </Button>
+
+              <Link
+                href="/pricing"
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                See pricing
+              </Link>
             </div>
+
+            <p className="mt-4 text-xs text-muted-foreground">
+              No credit card required to start.
+            </p>
           </div>
         </MaxWidthWrapper>
       </section>
 
-      <section className="relative bg-background pb-4">
-        <div className="absolute inset-x-0 bottom-24 top-24 bg-primary" />
+      <section className="relative bg-background pb-16 sm:pb-24">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-2/3 bg-linear-to-b from-primary/8 via-primary/4 to-transparent"
+        />
         <div className="relative mx-auto">
           <MaxWidthWrapper>
-            <div className="-m-2 rounded-xl bg-gray-900/5 p-2 ring-1 ring-inset ring-gray-900/10 lg:-m-4 lg:rounded-2xl lg:p-4">
+            <div className="rounded-xl border border-border bg-card/60 p-1.5 shadow-sm backdrop-blur-sm sm:rounded-2xl sm:p-2.5">
               <MockDiscordUI>
                 <AnimatedList>
                   <DiscordMessage
-                    avatarSrc="/brand-asset-profile-avatar.jpg"
+                    avatarSrc={PINGX_AVATAR}
                     avatarAlt="pingX avatar"
                     username="ping_X"
                     timestamp="Today at 12:45AM"
@@ -95,7 +208,7 @@ const page = () => {
                   />
 
                   <DiscordMessage
-                    avatarSrc="/brand-asset-profile-avatar.jpg"
+                    avatarSrc={PINGX_AVATAR}
                     avatarAlt="pingX Avatar"
                     username="ping_X"
                     timestamp="Today at 01:00AM"
@@ -110,7 +223,7 @@ const page = () => {
                   />
 
                   <DiscordMessage
-                    avatarSrc="/brand-asset-profile-avatar.jpg"
+                    avatarSrc={PINGX_AVATAR}
                     avatarAlt="pingX Avatar"
                     username="ping_X"
                     timestamp="Today at 5:11AM"
@@ -129,153 +242,146 @@ const page = () => {
         </div>
       </section>
 
-      <section className="relative py-24 sm:py-28 bg-background">
-        <MaxWidthWrapper className="flex flex-col items-center gap-14 sm:gap-20">
-          <div>
-            <h2 className="text-base/7 font-semibold text-center text-link">
+      <section className="relative bg-background py-24 sm:py-28">
+        <MaxWidthWrapper>
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-semibold uppercase tracking-wide text-link">
               Intuitive Monitoring
-            </h2>
-            <h2 className="text-center text-3xl font-semibold tracking-tight text-foreground text-pretty sm:text-4xl">
+            </p>
+            <h2 className="mt-2 text-3xl font-semibold tracking-tight text-balance text-foreground sm:text-4xl">
               Stay ahead with real-time insights
             </h2>
+            <p className="mt-4 text-base text-muted-foreground">
+              Everything you need to know the moment it happens, without
+              building a dashboard for it.
+            </p>
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-3 lg:grid-rows-2">
-
-            <div className="relative lg:row-span-2">
-              <div className="absolute inset-px bg-card rounded-lg lg:rounded-l-4xl" />
-              <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(var(--radius-lg)+1px)] lg:rounded-l-[calc(2rem+1px)]">
-                <div className="px-8 pb-3 pt-8 sm:px-10 sm:pb-0 sm:pt-10">
-                  <p className="mt-2 text-lg/7 font-medium tracking-tight text-foreground max-lg:text-center">
-                    Real-time Notifications
-                  </p>
-                  <p className="mt-2 max-w-lg text-sm/6 text-muted-foreground max-lg:text-center">
-                    Get notified about critical events the moment they happen,
-                    no matter if you're at home or on the go.
-                  </p>
-                </div>
-
-                <div className="relative min-h-120 w-full grow @container max-lg:mx-auto max-lg:max-w-sm">
-                  <div className="absolute inset-x-10 bottom-0 top-10 overflow-hidden rounded-t-[12cqw] border-x-[3cqw] border-t-[3cqw] border-gray-700 bg-gray-900 shadow-2xl">
-                    <Image
-                      src="/pingx-sm.png"
-                      alt="Phone screen displaying app interface"
-                      className="size-full object-cover object-top"
-                      fill
-                    />
-                  </div>
-                </div>
+          <div className="mt-14 grid gap-4 lg:grid-cols-3 lg:grid-rows-2">
+            <BentoCard
+              className="lg:row-span-2"
+              title="Real-time Notifications"
+              description="Get notified about critical events the moment they happen, no matter if you're at home or on the go."
+            >
+              <div className="flex items-center gap-2 pb-3">
+                <span className="relative flex size-2">
+                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-success opacity-60" />
+                  <span className="relative inline-flex size-2 rounded-full bg-success" />
+                </span>
+                <span className="text-xs font-medium text-muted-foreground">
+                  Live feed
+                </span>
               </div>
 
-              <div className="pointer-events-none absolute inset-px rounded-lg shadow-sm ring-1 ring-black/5 lg:rounded-l-4xl" />
-            </div>
-
-            <div className="relative max-lg:row-start-1">
-              <div className="absolute inset-px rounded-lg bg-card max-lg:rounded-t-4xl" />
-              <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(var(--radius-lg)+1px)] max-lg:rounded-t-[calc(2rem+1px)]">
-                <div className="px-8 pb-3 pt-8 sm:px-10 sm:pb-0 sm:pt-10">
-                  <p className="mt-2 text-lg/7 font-medium tracking-tight text-foreground max-lg:text-center">
-                    Track Any Event
-                  </p>
-                  <p className="mt-2 text-sm/6 text-muted-foreground max-lg:text-center">
-                    From new user signups to successful payments, pingX notifies
-                    you for all critical events in your SaaS.
-                  </p>
-                </div>
-
-                <div className="flex flex-1 items-center justify-center px-8 max-lg:pb-12 max-lg:pt-10 sm:px-10 lg:pb-2">
-                  <Image
-                    src="/bento-any-event.png"
-                    alt="Bento box illustrating event tracking"
-                    className="w-full max-lg:max-w-sm"
-                    width={500}
-                    height={500}
-                  />
-                </div>
-
-                <div className="pointer-events-none absolute inset-px rounded-lg shadow-sm ring-1 ring-black/5 max-lg:rounded-t-4xl" />
-              </div>
-            </div>
-
-            <div className="relative max-lg:row-start-3 lg:col-start-2 lg:row-start-2">
-              <div className="absolute inset-px rounded-lg bg-card" />
-              <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(var(--radius-lg)+1px)]">
-                <div className="px-8 pt-8 sm:px-10 sm:pt-10">
-                  <p className="mt-2 text-lg/7 font-medium tracking-tight text-foreground max-lg:text-center">
-                    Track Any Properties
-                  </p>
-                  <p className="mt-2 max-w-lg text-sm/6 text-muted-foreground max-lg:text-center">
-                    Add any custom data you like to an event, such as a user
-                    email, a purchase amount or an exceeded quota.
-                  </p>
-                </div>
-
-                <div className="flex flex-1 items-center justify-center px-8 max-lg:pb-12 max-lg:pt-10 sm:px-10 lg:pb-2">
-                  <Image
-                    className="w-full max-lg:max-w-xs"
-                    src="/bento-custom-data.png"
-                    alt="Bento box illustrating custom data tracking"
-                    width={500}
-                    height={300}
-                  />
-                </div>
-              </div>
-
-              <div className="pointer-events-none absolute inset-px rounded-lg shadow-sm ring-1 ring-black/5" />
-            </div>
-
-            <div className="relative lg:row-span-2">
-              <div className="absolute inset-px rounded-lg bg-card max-lg:rounded-b-4xl lg:rounded-r-4xl" />
-
-              <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(var(--radius-lg)+1px)] max-lg:rounded-b-[calc(2rem+1px)] lg:rounded-r-[calc(2rem+1px)]">
-                <div className="px-8 pb-3 pt-8 sm:px-10 sm:pb-0 sm:pt-10">
-                  <p className="mt-2 text-lg/7 font-medium tracking-tight text-foreground max-lg:text-center">
-                    Easy Integration
-                  </p>
-                  <p className="mt-2 max-w-lg text-sm/6 text-muted-foreground max-lg:text-center">
-                    Connect pingX with your existing workflows in minutes and
-                    call our instuitive logging API from any language.
-                  </p>
-                </div>
-
-                <div className="relative min-h-120 w-full grow">
-                  <div className="absolute bottom-0 left-10 right-0 top-10 overflow-hidden rounded-tl-xl bg-gray-900 shadow-2xl">
-                    <div className="flex bg-gray-800/40 ring-1 ring-white/5">
-                      <div className="-mb-px flex text-sm/6 font-medium text-muted-foreground">
-                        <div className="border-b border-r border-b-white/20 border-r-white/10 bg-card/5 px-4 py-2 text-white">
-                          pingx.js
-                        </div>
+              <ul className="space-y-2">
+                {FEED.map((item) => (
+                  <li
+                    key={item.title}
+                    className="flex items-start gap-3 rounded-md border border-border bg-recessed/40 p-3"
+                  >
+                    <span className={cn("mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md", item.tint)}>
+                      <item.icon className="size-3.5" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <p className="truncate text-sm font-medium text-foreground">
+                          {item.title}
+                        </p>
+                        <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                          {item.time}
+                        </span>
                       </div>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {item.meta}
+                      </p>
                     </div>
+                  </li>
+                ))}
+              </ul>
+            </BentoCard>
 
-                    <div className="overflow-hidden">
-                      <div className="max-h-120">
-                        <SyntaxHighlighter
-                          language="javascript"
-                          style={{
-                            ...oneDark,
-                            'pre[class*="language-"]': {
-                              ...oneDark['pre[class*="language-"]'],
-                              background: "transparent",
-                              overflow: "hidden",
-                            },
-                            'code[class*="language-"]': {
-                              ...oneDark['code[class*="language-"]'],
-                              background: "transparent",
-                              fontSize: "0.6rem",
-                            },
-                          }}
-                        >
-                          {codeSnippet}
-                        </SyntaxHighlighter>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+            <BentoCard
+              title="Track Any Event"
+              description="From new user signups to successful payments, pingX notifies you for all critical events in your SaaS."
+            >
+              <div className="flex flex-wrap gap-2">
+                {EVENT_TYPES.map((label, i) => (
+                  <span
+                    key={label}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
+                      i === 0
+                        ? "border-primary/30 bg-info-tint text-link"
+                        : "border-border bg-recessed/50 text-muted-foreground"
+                    )}
+                  >
+                    <span className="size-1.5 rounded-full bg-current opacity-60" />
+                    {label}
+                  </span>
+                ))}
               </div>
+            </BentoCard>
 
-              <div className="pointer-events-none absolute inset-px rounded-lg shadow-sm ring-1 ring-black/5 max-lg:rounded-b-4xl lg:rounded-r-4xl" />
-            </div>
+            <BentoCard
+              className="lg:col-start-2 lg:row-start-2"
+              title="Track Any Properties"
+              description="Add any custom data you like to an event, such as a user email, a purchase amount or an exceeded quota."
+            >
+              <dl className="divide-y divide-border overflow-hidden rounded-md border border-border bg-recessed/40 font-mono text-xs">
+                {PROPERTIES.map(({ key, value, accent }) => (
+                  <div
+                    key={key}
+                    className="flex items-center justify-between gap-3 px-3 py-2"
+                  >
+                    <dt className="truncate text-muted-foreground">{key}</dt>
+                    <dd className={cn("truncate", accent ? "text-link" : "text-foreground")}>
+                      {value}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </BentoCard>
+
+            <BentoCard
+              className="lg:row-span-2"
+              title="Easy Integration"
+              description="Connect pingX with your existing workflows in minutes and call our intuitive logging API from any language."
+            >
+              <div className="overflow-hidden rounded-md border border-border bg-[#282c34]">
+                <div className="flex items-center gap-2 border-b border-white/10 px-3 py-2">
+                  <span className="flex gap-1.5">
+                    <span className="size-2 rounded-full bg-white/20" />
+                    <span className="size-2 rounded-full bg-white/20" />
+                    <span className="size-2 rounded-full bg-white/20" />
+                  </span>
+                  <span className="ml-1 font-mono text-xs text-white/60">
+                    pingx.js
+                  </span>
+                </div>
+
+                <SyntaxHighlighter
+                  language="javascript"
+                  style={{
+                    ...oneDark,
+                    'pre[class*="language-"]': {
+                      ...oneDark['pre[class*="language-"]'],
+                      background: "transparent",
+                      margin: 0,
+                      padding: "0.875rem",
+                      overflow: "auto",
+                    },
+                    'code[class*="language-"]': {
+                      ...oneDark['code[class*="language-"]'],
+                      background: "transparent",
+                      fontSize: "0.7rem",
+                      lineHeight: 1.6,
+                    },
+                  }}
+                >
+                  {codeSnippet}
+                </SyntaxHighlighter>
+              </div>
+            </BentoCard>
           </div>
         </MaxWidthWrapper>
       </section>
