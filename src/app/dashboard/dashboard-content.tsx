@@ -4,12 +4,13 @@ import { client } from "@/lib/client"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import LoadingSpinner  from "@/components/loading-spinner"
 import { format, formatDistanceToNow } from "date-fns"
-import { ArrowRight, BarChart2, Clock, Database, Trash2 } from "lucide-react"
+import { ArrowRight, BarChart2, Clock, Database, PlusIcon, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { useState } from "react"
-import { Modal } from "@/components/ui/modal"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { DashboardEmptyState } from "./dashboard-empty-state"
+import { CreateEventCategoryModal } from "@/components/create-event-category-modal"
 
 export const DashboardContent = () => {
     const [deletingCategory, setDeletingCategory] = useState<string | null>(null);
@@ -48,28 +49,38 @@ export const DashboardContent = () => {
 
     return (
         <>
-            <ul className="max-w-6xl grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+
+            <div className="mb-4 flex items-center justify-between gap-3">
+                <p className="text-sm text-muted-foreground">
+                    {categories.length} {categories.length === 1 ? "category" : "categories"}
+                </p>
+
+                <CreateEventCategoryModal>
+                    <Button>
+                        <PlusIcon />
+                        Create category
+                    </Button>
+                </CreateEventCategoryModal>
+            </div>
+
+            <ul className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
                 {
                     categories.map(category => (
-                        <li 
+                        <li
                             key={category.id}
-                            className="relative group transition-all duration-200 hover:translate-y-0.5 z-10"
+                            className="group rounded-md border border-border bg-card transition-colors hover:border-foreground/20"
                         >
-                            <div className="absolute inset-px z-0 rounded-lg bg-white"/>
-
-                            <div className="pointer-events-none z-0 absolute rounded-lg shadow-xs inset-px transition-all duration-300 group-hover:shadow-md ring-1 ring-black/5"/>
-
-                            <div className="relative z-10 p-6">
-                                <div className="flex items-center mb-6 gap-4">
+                            <div className="p-4">
+                                <div className="mb-4 flex items-center gap-4">
                                     <div>
-                                        <h3 className="text-lg/7 font-medium tracking-tight text-gray-950">{category.name}</h3>
-                                        <p className="text-sm/6 text-gray-600">{format(category.createdAt, "MM d, yyyy")}</p>
+                                        <h3 className="text-base font-semibold tracking-tight text-foreground">{category.name}</h3>
+                                        <p className="text-sm text-muted-foreground">{format(category.createdAt, "MM d, yyyy")}</p>
                                     </div>
                                 </div>
 
-                                <div className="space-y-3 mb-6">
-                                    <div className="flex items-center text-sm/6 text-gray-600">
-                                        <Clock className="size-4 mr-2 text-brand-500"/>
+                                <div className="mb-4 space-y-2">
+                                    <div className="flex items-center text-sm text-muted-foreground">
+                                        <Clock className="size-4 mr-2 text-link"/>
                                         <span className="font-medium">Last Ping:</span>
                                         <span className="ml-1">
                                             {
@@ -78,16 +89,16 @@ export const DashboardContent = () => {
                                         </span>
                                     </div>
 
-                                    <div className="flex items-center text-sm/6 text-gray-600">
-                                        <Database className="size-4 mr-2 text-brand-500"/>
+                                    <div className="flex items-center text-sm text-muted-foreground">
+                                        <Database className="size-4 mr-2 text-link"/>
                                         <span className="font-medium">Unique Fields:</span>
                                         <span className="ml-1">
                                             { category.uniqueFieldCount || 0 }
                                         </span>
                                     </div>
 
-                                    <div className="flex items-center text-sm/6 text-gray-600">
-                                        <BarChart2 className="size-4 me-2 text-brand-500"/>
+                                    <div className="flex items-center text-sm text-muted-foreground">
+                                        <BarChart2 className="size-4 me-2 text-link"/>
                                         <span className="font-medium">Events this month:</span>
                                         <span className="ml-1">
                                             { category.eventsCount || 0}
@@ -109,11 +120,11 @@ export const DashboardContent = () => {
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        className="text-gray-500 hover:text-red-500 transition-colors"
+                                        className="text-muted-foreground hover:text-destructive transition-colors"
                                         aria-label={`Delete ${category.name}`}
                                         onClick={() => setDeletingCategory(category.name)}
                                     >
-                                        <Trash2 className="size-5"/>
+                                        <Trash2 className="size-4"/>
                                     </Button>
                                 </div>
                             </div>
@@ -122,39 +133,22 @@ export const DashboardContent = () => {
                 }
             </ul>
 
-            <Modal
-                showModal={!!deletingCategory}
-                setShowModal={() => setDeletingCategory(null)}
-                className="max-w-md p-8"
-            >
-                <div className="space-y-6">
-                    <div>
-                        <h2 className="text-lg/7 font-medium text-gray-950 tracking-tight">
-                            Delete Category
-                        </h2>
-                        <p className="text-sm/6 text-gray-600">
-                            Are you sure you want to delete the <span className="font-bold text-base">{deletingCategory}</span> category?
-                            This action cannot be undone.
-                        </p>
-                    </div>
-
-                    <div className="flex justify-end space-x-3 pt-4 border-t">
-                        <Button
-                            variant="outline"
-                            onClick={() => setDeletingCategory(null)}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            variant="destructive"
-                            onClick={() => deletingCategory && deleteCategory(deletingCategory)}
-                            disabled={isDeletingCategory}
-                        >
-                            {isDeletingCategory ? "Deleting..." : "Delete"}
-                        </Button>
-                    </div>
-                </div>
-            </Modal>
+            <ConfirmDialog
+                open={!!deletingCategory}
+                onOpenChange={(open) => !open && setDeletingCategory(null)}
+                title="Delete category"
+                description={
+                    <>
+                        Are you sure you want to delete the{" "}
+                        <span className="font-medium text-foreground">{deletingCategory}</span>{" "}
+                        category? This action cannot be undone.
+                    </>
+                }
+                confirmLabel="Delete"
+                destructive
+                pending={isDeletingCategory}
+                onConfirm={() => deletingCategory && deleteCategory(deletingCategory)}
+            />
         </>
     )
 }

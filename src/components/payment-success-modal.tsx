@@ -42,16 +42,16 @@ export const PaymentSuccessModal = () => {
         {isPending || !isPaymentSuccessful ? (
           <div className="flex flex-col items-center justify-center h-64">
             <LoadingSpinner className="mb-4" />
-            <p className="text-lg/7 font-medium text-gray-900">
+            <p className="text-lg/7 font-medium text-foreground">
               Upgrading your account...
             </p>
-            <p className="text-gray-600 text-sm/6 mt-2 text-center text-pretty">
+            <p className="text-muted-foreground text-sm/6 mt-2 text-center text-pretty">
               Please wait while we process your upgrade. This may take a moment.
             </p>
           </div>
         ) : (
           <>
-            <div className="relative aspect-video border border-gray-200 w-full overflow-hidden rounded-lg bg-gray-50">
+            <div className="relative aspect-video border border-border w-full overflow-hidden rounded-lg bg-recessed">
               <img
                 src="/brand-asset-heart.png"
                 className="h-full w-full object-cover"
@@ -63,7 +63,7 @@ export const PaymentSuccessModal = () => {
               <p className="text-lg/7 tracking-tight font-medium text-pretty">
                 Upgrade successful!
               </p>
-              <p className="text-gray-600 text-sm/6 text-pretty">
+              <p className="text-muted-foreground text-sm/6 text-pretty">
                 Thank you for upgrading to Pro and supporting PingX. Your
                 account has been upgraded.
               </p>

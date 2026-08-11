@@ -40,8 +40,6 @@ export const SocialButtons = ({
     try {
       setLoading(provider)
       await authClient.signIn.social({ provider, callbackURL })
-      // On success the browser is redirected to the provider, so nothing after
-      // this runs. Loading state is only cleared on failure.
     } catch (error) {
       console.error(`${provider} sign in error:`, error)
       toast.error(`Could not sign in with ${provider}. Please try again.`)
@@ -54,7 +52,7 @@ export const SocialButtons = ({
       <div className="grid grid-cols-2 gap-3">
         <Button
           variant="outline"
-          className="h-12"
+          className="h-10"
           onClick={() => handle("google")}
           disabled={disabled || loading !== null}
           type="button"
@@ -86,7 +84,7 @@ export const SocialButtons = ({
 
         <Button
           variant="outline"
-          className="h-12"
+          className="h-10"
           onClick={() => handle("github")}
           disabled={disabled || loading !== null}
           type="button"
@@ -110,7 +108,7 @@ export const SocialButtons = ({
         <div className="absolute inset-0 flex items-center">
           <Separator />
         </div>
-        <span className="relative mx-auto flex w-fit bg-white px-4 text-xs uppercase text-gray-500">
+        <span className="relative mx-auto flex w-fit bg-background px-4 text-xs uppercase text-muted-foreground">
           or continue with email
         </span>
       </div>

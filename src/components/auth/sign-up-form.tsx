@@ -42,9 +42,6 @@ export const SignUpForm = () => {
   const onSubmit = async (values: SignUpSchema) => {
     setIsLoading(true)
 
-    // quotoaLimit, plan and apiKey are server-owned (input: false in the Better
-    // Auth config), so they are populated from their defaults rather than sent
-    // from here.
     const { error } = await authClient.signUp.email({
       name: values.name,
       email: values.email,
@@ -79,7 +76,7 @@ export const SignUpForm = () => {
                     autoComplete="name"
                     placeholder="Ada Lovelace"
                     disabled={isLoading}
-                    className="h-12"
+                    className="h-10"
                     {...field}
                   />
                 </FormControl>
@@ -100,7 +97,7 @@ export const SignUpForm = () => {
                     autoComplete="email"
                     placeholder="you@example.com"
                     disabled={isLoading}
-                    className="h-12"
+                    className="h-10"
                     {...field}
                   />
                 </FormControl>
@@ -122,13 +119,13 @@ export const SignUpForm = () => {
                       autoComplete="new-password"
                       placeholder="••••••••"
                       disabled={isLoading}
-                      className="h-12 pr-12"
+                      className="h-10 pr-10"
                       {...field}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-brand-900"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                       tabIndex={-1}
                       aria-label={
                         showPassword ? "Hide password" : "Show password"
@@ -159,7 +156,7 @@ export const SignUpForm = () => {
                     autoComplete="new-password"
                     placeholder="••••••••"
                     disabled={isLoading}
-                    className="h-12"
+                    className="h-10"
                     {...field}
                   />
                 </FormControl>
@@ -168,17 +165,17 @@ export const SignUpForm = () => {
             )}
           />
 
-          <Button className="h-12 w-full" type="submit" disabled={isLoading}>
+          <Button className="h-10 w-full" type="submit" disabled={isLoading}>
             {isLoading ? "Creating account..." : "Create account"}
           </Button>
         </form>
       </Form>
 
-      <p className="text-center text-sm text-gray-600">
+      <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}
         <Link
           href="/sign-in"
-          className="font-semibold text-brand-700 hover:underline"
+          className="font-semibold text-link hover:underline"
         >
           Sign in
         </Link>

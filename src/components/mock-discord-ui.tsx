@@ -6,7 +6,7 @@ import Image from "next/image"
 const MockDiscordUI = ({children} : PropsWithChildren) => {
   return (
     <div className="flex min-h-[800px] w-full max-w-[1200px] bg-discord-background overflow-hidden shadow-lg text-white rounded-lg">
-        {/* server list */}
+
         <div className="hidden md:flex w-[72px] bg-[#202225] py-3 flex-col items-center">
             <div className="size-12 bg-discord-brand-color rounded-2xl flex items-center justify-center mb-2 hover:rounded-xl transition-all duration-200">
                 <Icons.discord className="size-3/5 text-white"/>
@@ -27,7 +27,6 @@ const MockDiscordUI = ({children} : PropsWithChildren) => {
             </div>
         </div>
 
-        {/* dm list */}
         <div className="hidden md:flex flex-col bg-[#2f3136]">
             <div className="px-4 h-16 border-b border-[#202225] flex items-center shadow-xs">
                 <div className="w-full h-8 bg-[#202225] text-sm rounded flex items-center justify-center px-2 text-gray-500 cursor-not-allowed">
@@ -77,7 +76,7 @@ const MockDiscordUI = ({children} : PropsWithChildren) => {
             </div>
 
             <div className="p-2 bg-[#292b2f] flex items-center">
-                <div className="size-8 rounded-full bg-brand-700 mr-2" />
+                <div className="size-8 rounded-full bg-primary mr-2" />
                 <div className="flex-1">
                     <p className="text-sm font-medium text-white">ping_X</p>
                     <p className="text-xs text-[#b9bbbe] flex items-center">@ping_x</p>
@@ -91,9 +90,8 @@ const MockDiscordUI = ({children} : PropsWithChildren) => {
             </div>
         </div>
 
-        {/* main content here */}
         <div className="flex-1 flex flex-col">
-            {/* dm list */}
+
             <div className="h-16 bg-[#36393f] flex items-center px-4 shadow-xs border-b border-[#202225]">
                 <div className="md:hidden mr-4">
                     <Menu className="size-6 text-[#b9bbbe] hover:text-white cursor-pointer"/>
@@ -124,12 +122,10 @@ const MockDiscordUI = ({children} : PropsWithChildren) => {
                 </div>
             </div>
 
-            {/* message his */}
             <div className="flex-1 overflow-y-auto p-4 bg-discord-background flex flex-col-reverse">
                 {children}
             </div>
 
-            {/* message input */}
             <div className="p-4">
                 <div className="flex items-center bg-[#40444b] rounded-lg p-1">
                     <PlusCircle className="mx-3 text-[#b9bbbe] hover:text-white cursor-not-allowed"/>

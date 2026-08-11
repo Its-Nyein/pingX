@@ -1,8 +1,9 @@
 import { CreateEventCategoryModal } from "@/components/create-event-category-modal"
+import { EmptyState } from "@/components/shell/empty-state"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
 import { client } from "@/lib/client"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { Inbox } from "lucide-react"
 
 export const DashboardEmptyState = () => {
   const queryClient = useQueryClient()
@@ -17,29 +18,26 @@ export const DashboardEmptyState = () => {
   })
 
   return (
-    <Card className="flex flex-col items-center justify-center rounded-2xl flex-1 text-center p-8 border border-gray-200 shadow-md">
-      <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
-        No Event Categories Yet
-      </h1>
+    <EmptyState
+      icon={Inbox}
+      title="No categories yet"
 
-      <p className="text-sm text-gray-600 max-w-md mt-3">
-        Start organizing your events by creating a category.
-      </p>
+      description="Create your first one to start receiving events."
+      action={
+        <div className="flex flex-col items-center gap-2 sm:flex-row">
+          <CreateEventCategoryModal>
+            <Button>Create category</Button>
+          </CreateEventCategoryModal>
 
-      <div className="flex flex-col sm:flex-row items-center justify-center w-full mt-6 space-y-3 sm:space-y-0 sm:space-x-4">
-        <Button
-          variant="outline"
-          className="flex-1 px-6"
-          onClick={() => insertQuickstartCategories()}
-          disabled={isPending}
-        >
-          ⚡ {isPending ? "Creating..." : "Quickstart"}
-        </Button>
-
-        <CreateEventCategoryModal>
-          <Button className="flex-1 px-5">+ Add Category</Button>
-        </CreateEventCategoryModal>
-      </div>
-    </Card>
+          <Button
+            variant="outline"
+            onClick={() => insertQuickstartCategories()}
+            disabled={isPending}
+          >
+            {isPending ? "Creating..." : "Use quickstart set"}
+          </Button>
+        </div>
+      }
+    />
   )
 }

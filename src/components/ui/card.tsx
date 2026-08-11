@@ -14,16 +14,59 @@ export const Card = ({
   return (
     <div
       className={cn(
-        "relative rounded-lg bg-gray-50 text-card-foreground",
+        "rounded-md border border-border bg-card text-card-foreground",
         className
       )}
       {...props}
     >
-      <div className={cn("relative z-10 p-6", contentClassName)}>
-        {children}
-      </div>
-      <div className="absolute z-0 inset-px rounded-lg bg-white" />
-      <div className="pointer-events-none z-0 absolute inset-px rounded-lg shadow-xs ring-1 ring-black/5" />
+      <div className={cn("p-4", contentClassName)}>{children}</div>
     </div>
   )
 }
+
+export const CardHeader = ({
+  className,
+  ...props
+}: HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn("flex flex-col gap-1 border-b border-border p-4", className)}
+    {...props}
+  />
+)
+
+export const CardTitle = ({
+  className,
+  ...props
+}: HTMLAttributes<HTMLHeadingElement>) => (
+  <h3
+    className={cn("text-lg font-semibold tracking-tight", className)}
+    {...props}
+  />
+)
+
+export const CardDescription = ({
+  className,
+  ...props
+}: HTMLAttributes<HTMLParagraphElement>) => (
+  <p className={cn("text-sm text-muted-foreground", className)} {...props} />
+)
+
+export const CardContent = ({
+  className,
+  ...props
+}: HTMLAttributes<HTMLDivElement>) => (
+  <div className={cn("p-4", className)} {...props} />
+)
+
+export const CardFooter = ({
+  className,
+  ...props
+}: HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn(
+      "flex items-center gap-2 border-t border-border bg-recessed/50 p-4",
+      className
+    )}
+    {...props}
+  />
+)
