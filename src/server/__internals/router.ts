@@ -37,6 +37,8 @@ export const router = <T extends Record<string, OperationType<any, any>>>(
           err.status
         )
       } else {
+        console.error("[api] unhandled error", err)
+
         return c.json(
           {
             error: "Unknown Error",
