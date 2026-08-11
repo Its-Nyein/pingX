@@ -5,6 +5,8 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "", {
   typescript: true,
 })
 
+const PRO_PRICE_ID = "price_1R46flH9ZLlYLuqEkG89YAb2"
+
 export const createCheckoutSession = async ({
   userEmail,
   userId,
@@ -12,11 +14,20 @@ export const createCheckoutSession = async ({
   userEmail: string
   userId: string
 }) => {
+  const price = process.env.STRIPE_PRICE_ID ?? PRO_PRICE_ID
+
   const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "")
+
+  if (!appUrl) {
+    throw new Error(
+      "NEXT_PUBLIC_APP_URL is not set. Stripe rejects a checkout session whose success_url is not an absolute URL."
+    )
+  }
+
   const session = await stripe.checkout.sessions.create({
     line_items: [
       {
-        price: "price_1R46flH9ZLlYLuqEkG89YAb2",
+        price,
         quantity: 1,
       },
     ],

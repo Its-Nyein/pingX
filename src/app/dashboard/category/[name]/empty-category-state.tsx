@@ -1,8 +1,4 @@
 import { Card } from "@/components/ui/card"
-import { client } from "@/lib/client"
-import { useQuery } from "@tanstack/react-query"
-import { useRouter } from "next/navigation"
-import { useEffect } from "react"
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
 import { atomDark } from "react-syntax-highlighter/dist/esm/styles/prism"
 
@@ -11,41 +7,22 @@ export const EmptyCategoryState = ({
 }: {
   categoryName: string
 }) => {
-  const router = useRouter()
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
 
-  const { data } = useQuery({
-    queryKey: ["category", categoryName, "hasEvents"],
-    queryFn: async () => {
-      const res = await client.category.pollCategory.$get({
-        name: categoryName,
-      })
-      return await res.json()
-    },
-    refetchInterval: (query) => {
-      return query.state.data?.hasEvents ? false : 1000
-    },
+  const codeSnippet = `await fetch('${baseUrl}/api/v1/events', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    category: '${categoryName}',
+    data: {
+      field1: 'value1',
+      field2: 'value2'
+    }
   })
-
-  const hasEvents = data?.hasEvents
-
-  useEffect(() => {
-    if (hasEvents) router.refresh()
-  }, [hasEvents, router])
-
-  const codeSnippet = `
-    await fetch('https://ping-x.netlify.app/api/events', {
-        method: 'POST',
-        headers: {
-            'Authorization': 'Bearer YOUR_API_KEY'
-        },
-        body: JSON.stringify({
-            category: '${categoryName}',
-            data: {
-            field1: 'value1',
-            field2: 'value2'
-            }
-        })
-    })`
+})`
 
   return (
     <Card
