@@ -91,7 +91,7 @@ export const router = <T extends Record<string, OperationType<any, any>>>(
               if (err instanceof ZodError) {
                 throw new HTTPException(400, {
                   cause: err,
-                  message: err.message,
+                  message: err.issues.map((issue) => issue.message).join("; "),
                 })
               } else {
                 throw err
@@ -131,7 +131,7 @@ export const router = <T extends Record<string, OperationType<any, any>>>(
               if (err instanceof ZodError) {
                 throw new HTTPException(400, {
                   cause: err,
-                  message: err.message,
+                  message: err.issues.map((issue) => issue.message).join("; "),
                 })
               } else {
                 throw err

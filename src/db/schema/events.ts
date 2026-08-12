@@ -29,7 +29,14 @@ export const events = pgTable(
       .$defaultFn(() => new Date())
       .$onUpdate(() => new Date()),
   },
-  (table) => [index("Event_createdAt_idx").on(table.createdAt)]
+  (table) => [
+    index("Event_createdAt_idx").on(table.createdAt),
+    index("Event_eventCategoryId_createdAt_idx").on(
+      table.eventCategoryId,
+      table.createdAt.desc()
+    ),
+    index("Event_userId_idx").on(table.userId),
+  ]
 )
 
 export type Event = typeof events.$inferSelect

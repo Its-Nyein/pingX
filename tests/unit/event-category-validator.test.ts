@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { EVENT_CATEGORY_VALIDATOR } from "@/lib/validators/validator"
 
-describe("EVENT_CATEGORY_VALIDATOR — accepts", () => {
+describe("EVENT_CATEGORY_VALIDATOR - accepts", () => {
   it.each([
     ["lowercase letters", "sale"],
     ["uppercase letters", "SALE"],
@@ -16,7 +16,7 @@ describe("EVENT_CATEGORY_VALIDATOR — accepts", () => {
   })
 })
 
-describe("EVENT_CATEGORY_VALIDATOR — rejects", () => {
+describe("EVENT_CATEGORY_VALIDATOR - rejects", () => {
   it("an empty string", () => {
     const result = EVENT_CATEGORY_VALIDATOR.safeParse("")
 

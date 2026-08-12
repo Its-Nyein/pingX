@@ -73,7 +73,11 @@ export const ProductSidebar = ({
 
             <ul className="flex flex-col gap-0.5">
               {items.map((item) => {
-                const isActive = pathname === item.href
+                const isActive =
+                  item.href === "/dashboard"
+                    ? pathname === item.href
+                    : pathname === item.href ||
+                      pathname.startsWith(`${item.href}/`)
 
                 return (
                   <li key={`${item.href}-${item.text}`}>

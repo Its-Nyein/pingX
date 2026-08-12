@@ -116,7 +116,7 @@ async function main() {
     .limit(1)
 
   if (existing.length > 0) {
-    console.log("Events already present — skipping event generation.\n")
+    console.log("Events already present - skipping event generation.\n")
   } else {
     const rows = Array.from({ length: EVENT_COUNT }, () => {
       const category = pick(categories)
@@ -165,7 +165,7 @@ Try the ingestion API:
     -H "Content-Type: application/json" \\
     -d '{"category":"sale","data":{"plan":"PRO","amount":52.99}}'
 
-Delivery needs a Discord bot token and your Discord ID in account settings —
+Delivery needs a Discord bot token and your Discord ID in account settings -
 see the README. Without it the event is stored and marked FAILED.
 `)
 }

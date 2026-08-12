@@ -7,7 +7,7 @@ reversal written here before the forward migration is applied.
 
 ## 0001_add_quota_warned80
 
-**Forward** — `ALTER TABLE "Quota" ADD COLUMN "warned80" boolean DEFAULT false NOT NULL;`
+**Forward** - `ALTER TABLE "Quota" ADD COLUMN "warned80" boolean DEFAULT false NOT NULL;`
 
 Purely additive. Safe to apply while the current code is running: it has a
 default, so existing rows are backfilled to `false` and code that doesn't know
@@ -34,16 +34,16 @@ ALTER TABLE "user"  DROP COLUMN "quotoaLimit";
 ```
 
 **Destructive. Apply only after the code that stopped writing these columns is
-deployed** — i.e. after this PR is live. Applied earlier, event ingestion breaks
+deployed** - i.e. after this PR is live. Applied earlier, event ingestion breaks
 immediately: `formattedMessage` is `NOT NULL` with no default, so every insert
 from the old code fails.
 
 Both columns were verified dead before removal:
 
-- `quotoaLimit` — never read anywhere. Plan limits come from `FREE_QUOTA` /
+- `quotoaLimit` - never read anywhere. Plan limits come from `FREE_QUOTA` /
   `PRO_QUOTA` in `src/config.ts`. It was also declared as a Better Auth
   `additionalField`, removed in `src/lib/auth.ts` in the same change.
-- `formattedMessage` — written on every insert, never read by any query, route
+- `formattedMessage` - written on every insert, never read by any query, route
   or component.
 
 **Rollback**
@@ -62,7 +62,7 @@ genuinely reverting the code as well:
 ALTER TABLE "Event" ALTER COLUMN "formattedMessage" DROP DEFAULT;
 ```
 
-The previous contents were `"<Title>\n\n<description>"` — the capitalised
+The previous contents were `"<Title>\n\n<description>"` - the capitalised
 category name, a blank line, then the embed description. Both parts are still
 produced by `formatDiscordEmbed` in `src/lib/format-discord-embed.ts`, so the
 column is reconstructible if it is ever needed.
@@ -70,9 +70,39 @@ column is reconstructible if it is ever needed.
 ### Suggested order
 
 1. Merge and deploy this PR (code stops writing both columns).
-2. Apply `0001` — safe at any time.
+2. Apply `0001` - safe at any time.
 3. Verify ingestion and the dashboard are healthy.
 4. Apply `0002`.
 
 Steps 1–3 and step 4 can be separated by as long as you like; nothing depends on
 the columns being gone.
+
+---
+
+## 0003_add_event_indexes
+
+**Forward**
+
+```sql
+CREATE INDEX "Event_eventCategoryId_createdAt_idx" ON "Event" USING btree ("eventCategoryId","createdAt" DESC NULLS LAST);
+CREATE INDEX "Event_userId_idx" ON "Event" USING btree ("userId");
+```
+
+Purely additive. Every hot query filters `eventCategoryId` and orders by
+`createdAt DESC`, and a Postgres foreign key does not create an index, so these
+were sequential scans. Safe to apply while the current code is running - an
+index changes plans, never results.
+
+`CREATE INDEX` takes a write lock for the duration of the build. On the current
+table (tens of rows) that is imperceptible. If `Event` ever grows large enough
+for that to matter, rebuild with `CREATE INDEX CONCURRENTLY`, which cannot run
+inside the migration runner's transaction and would need applying by hand.
+
+**Rollback**
+
+```sql
+DROP INDEX "Event_eventCategoryId_createdAt_idx";
+DROP INDEX "Event_userId_idx";
+```
+
+Loses nothing but the query plans.

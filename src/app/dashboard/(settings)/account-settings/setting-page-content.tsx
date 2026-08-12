@@ -5,9 +5,11 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { client } from "@/lib/client"
+import { DISCORD_ID_VALIDATOR } from "@/lib/validators/validator"
 import { useMutation } from "@tanstack/react-query"
 import Link from "next/link"
 import { useState } from "react"
+import { toast } from "sonner"
 
 export const SettingPageContent = ({
   discordId: initialDiscordId,
@@ -15,35 +17,78 @@ export const SettingPageContent = ({
   discordId: string
 }) => {
   const [discordId, setDiscordId] = useState(initialDiscordId)
+  const [savedDiscordId, setSavedDiscordId] = useState(initialDiscordId)
+
+  const value = discordId.trim()
+  const validation = DISCORD_ID_VALIDATOR.safeParse(value)
+  const error = value && !validation.success ? validation.error.issues[0].message : null
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (discordId: string) => {
       const res = await client.project.setDiscordId.$post({ discordId })
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => null)
+        throw new Error(
+          (body as { message?: string } | null)?.message ??
+            "Could not save your Discord ID. Please try again."
+        )
+      }
+
       return await res.json()
     },
+    onSuccess: (_data, discordId) => {
+      setSavedDiscordId(discordId)
+      toast.success("Discord ID saved", {
+        description: "Events will be delivered to your Discord DMs.",
+      })
+    },
+    onError: (error) => {
+      toast.error("Could not save your Discord ID", {
+        description: error.message,
+      })
+    },
   })
+
+  const unchanged = value === savedDiscordId
+  const canSave = Boolean(value) && !error && !unchanged && !isPending
+
   return (
     <Card className="max-w-xl w-full space-y-4">
       <div className="pt-2">
-        <Label>Discord ID</Label>
+        <Label htmlFor="discordId">Discord ID</Label>
         <Input
+          id="discordId"
           className="mt-1"
           value={discordId}
           onChange={(e) => setDiscordId(e.target.value)}
           placeholder="Enter your Discord ID"
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? "discordId-error" : undefined}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && canSave) mutate(value)
+          }}
         />
+        {error ? (
+          <p id="discordId-error" className="mt-2 text-sm/6 text-destructive">
+            {error}
+          </p>
+        ) : null}
       </div>
 
       <p className="mt-2 text-sm/6 text-muted-foreground">
-        Don't know how to find your Discord ID?{" "}
-        <Link href="#" className="text-link hover:text-link">
+        Don&apos;t know how to find your Discord ID?{" "}
+        <Link
+          href="/dashboard/account-settings/discord-id"
+          className="text-link hover:text-link"
+        >
           Learn how to obtain it here
         </Link>
         .
       </p>
 
       <div className="pt-4">
-        <Button onClick={() => mutate(discordId)} disabled={isPending}>
+        <Button onClick={() => mutate(value)} disabled={!canSave}>
           {isPending ? "Saving..." : "Save Changes"}
         </Button>
       </div>

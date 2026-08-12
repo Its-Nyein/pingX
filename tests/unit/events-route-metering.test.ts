@@ -82,7 +82,7 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
-describe("POST /api/v1/events — delivery and metering are separate failure domains", () => {
+describe("POST /api/v1/events - delivery and metering are separate failure domains", () => {
   it("delivers, meters, and returns 200", async () => {
     const res = await post()
 

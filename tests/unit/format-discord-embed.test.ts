@@ -3,7 +3,7 @@ import { formatDiscordEmbed } from "@/lib/format-discord-embed"
 
 const AT = new Date("2026-08-11T12:45:00.000Z")
 
-describe("formatDiscordEmbed — title", () => {
+describe("formatDiscordEmbed - title", () => {
   it("capitalises the first letter of the category", () => {
     expect(formatDiscordEmbed({ categoryName: "sale", timestamp: AT }).title).toBe(
       "Sale"
@@ -23,7 +23,7 @@ describe("formatDiscordEmbed — title", () => {
   })
 })
 
-describe("formatDiscordEmbed — description", () => {
+describe("formatDiscordEmbed - description", () => {
   it("uses the supplied description", () => {
     expect(
       formatDiscordEmbed({
@@ -51,7 +51,7 @@ describe("formatDiscordEmbed — description", () => {
   })
 })
 
-describe("formatDiscordEmbed — fields", () => {
+describe("formatDiscordEmbed - fields", () => {
   it("maps each data entry to a non-inline field, preserving key order", () => {
     const embed = formatDiscordEmbed({
       categoryName: "sale",
@@ -82,7 +82,7 @@ describe("formatDiscordEmbed — fields", () => {
   })
 })
 
-describe("formatDiscordEmbed — timestamp", () => {
+describe("formatDiscordEmbed - timestamp", () => {
   it("serialises to an ISO 8601 string", () => {
     expect(
       formatDiscordEmbed({ categoryName: "sale", timestamp: AT }).timestamp
