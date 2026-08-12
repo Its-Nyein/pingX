@@ -29,6 +29,13 @@
       "when": 1786511456890,
       "tag": "0003_add_event_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1786526196337,
+      "tag": "0004_add_delivery_receipts",
+      "breakpoints": true
     }
   ]
 }

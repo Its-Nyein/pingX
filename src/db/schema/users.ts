@@ -1,4 +1,5 @@
 import { createId } from "@paralleldrive/cuid2"
+import { generateApiKey } from "@/lib/api-key"
 import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core"
 
 import { planEnum } from "./enums"
@@ -16,7 +17,7 @@ export const users = pgTable("user", {
   apiKey: text("apiKey")
     .notNull()
     .unique()
-    .$defaultFn(() => createId()),
+    .$defaultFn(() => generateApiKey()),
   discordId: text("discordId"),
 
   createdAt: timestamp("createdAt", { precision: 3, mode: "date" })

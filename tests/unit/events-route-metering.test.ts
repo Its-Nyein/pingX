@@ -105,13 +105,30 @@ describe("POST /api/v1/events - delivery and metering are separate failure domai
     expect(state.statusUpdates).not.toContain("FAILED")
   })
 
-  it("marks FAILED and returns 500 when Discord delivery fails", async () => {
-    state.sendEmbed.mockRejectedValue(new Error("discord 429"))
+  it("marks FAILED and returns 502 when Discord delivery fails transiently", async () => {
+    state.sendEmbed.mockRejectedValue(new Error("connection reset"))
 
     const res = await post()
     const body = await res.json()
 
-    expect(res.status).toBe(500)
+    expect(res.status).toBe(502)
+    expect(body.eventId).toBe("evt_1")
+    expect(state.statusUpdates).toEqual(["FAILED"])
+  })
+
+  it("returns 422 with the reason when Discord refuses permanently", async () => {
+    state.sendEmbed.mockRejectedValue(
+      Object.assign(new Error("Cannot send messages to this user"), {
+        status: 403,
+        code: 50007,
+      })
+    )
+
+    const res = await post()
+    const body = await res.json()
+
+    expect(res.status).toBe(422)
+    expect(body.message).toMatch(/does not accept direct messages/)
     expect(body.eventId).toBe("evt_1")
     expect(state.statusUpdates).toEqual(["FAILED"])
   })
