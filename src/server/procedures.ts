@@ -29,8 +29,7 @@ const authMiddleware = j.middleware(async ({ c, next }) => {
   }
 
   // The session user is Better Auth's shape. Downstream procedures expect the
-  // full database row (they read quotoaLimit and other columns), so it is
-  // loaded by id rather than passed through.
+  // full database row, so it is loaded by id rather than passed through.
   const [user] = await db
     .select()
     .from(users)

@@ -1,30 +1,16 @@
-import { addMonths, startOfMonth } from "date-fns"
 import { router } from "../__internals/router"
 import { privateProcedure } from "../procedures"
-import { db, eventCategories, quotas, users } from "@/db"
+import { db, eventCategories, users } from "@/db"
 import { FREE_QUOTA, PRO_QUOTA } from "@/config"
-import { and, count, eq } from "drizzle-orm"
+import { getOrRollQuota } from "@/lib/quota"
+import { count, eq } from "drizzle-orm"
 import { z } from "zod"
 
 export const projectRouter = router({
   getUsage: privateProcedure.query(async ({ c, ctx }) => {
     const { user } = ctx
 
-    const currentDate = startOfMonth(new Date())
-
-    const [quota] = await db
-      .select()
-      .from(quotas)
-      .where(
-        and(
-          eq(quotas.userId, user.id),
-          eq(quotas.month, currentDate.getMonth() + 1),
-          eq(quotas.year, currentDate.getFullYear())
-        )
-      )
-      .limit(1)
-
-    const eventCount = quota?.count ?? 0
+    const quota = await getOrRollQuota(user.id, user.plan)
 
     const [{ value: categoryCount }] = await db
       .select({ value: count() })
@@ -33,14 +19,12 @@ export const projectRouter = router({
 
     const limits = user.plan === "PRO" ? PRO_QUOTA : FREE_QUOTA
 
-    const resetDate = addMonths(currentDate, 1)
-
     return c.superjson({
       categoriesUsed: categoryCount,
       categoriesLimit: limits.maxEventCategories,
-      eventsUsed: eventCount,
-      eventsLimit: limits.maxEventsPerMonth,
-      resetDate,
+      eventsUsed: quota.used,
+      eventsLimit: quota.limit,
+      resetDate: quota.resetsAt,
     })
   }),
 

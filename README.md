@@ -20,6 +20,38 @@ Open [http://localhost:3000](http://localhost:3000).
 
 `STRIPE_SECRET_KEY` must be set for `npm run build` as well as for `npm run dev`
 — the Stripe client is constructed at module scope and throws on an empty key.
+A dummy `sk_test_placeholder` is enough if you are not touching billing.
+
+### Database driver
+
+`DATABASE_URL` must point at a **Neon** database. `src/db/index.ts` uses
+Drizzle's `neon-http` driver, which speaks Neon's SQL-over-HTTP protocol rather
+than the Postgres wire protocol — a plain local Postgres will not connect
+without a proxy in front of it. A Neon branch is the path of least resistance
+for throwaway data.
+
+### Demo data
+
+```bash
+npm run db:seed
+```
+
+Creates a demo account, three categories and ~50 events spread over 60 days with
+mixed delivery statuses, then prints the credentials and API key. Idempotent,
+and it refuses to run when `NODE_ENV=production`.
+
+### Discord delivery
+
+Discord will not let a bot DM an arbitrary user, so end-to-end delivery needs
+three things: a bot token from the
+[Developer Portal](https://discord.com/developers/applications)
+(`DISCORD_BOT_TOKEN`); the bot invited to a server you are also in, since a bot
+can only DM users it shares a server with; and direct messages from server
+members enabled in that server's privacy settings. Your own Discord user ID goes
+in `/dashboard/account-settings`.
+
+For billing work, `npm run stripe:listen` tunnels webhooks to localhost and
+prints the `whsec_…` value for `STRIPE_WEBHOOK_SECRET`.
 
 ## Auth
 
@@ -40,7 +72,7 @@ callback URL `<BETTER_AUTH_URL>/api/auth/callback/<provider>` with each.
 
 ### One user table
 
-pingX's application columns (`quotoaLimit`, `plan`, `apiKey`, `discordId`) live
+pingX's application columns (`plan`, `apiKey`, `discordId`) live
 on Better Auth's `user` table rather than in a separate table. That means a
 session read already carries them and no join or second query is needed:
 
@@ -109,8 +141,6 @@ rename a column.
 
 Worth knowing:
 
-- `quotoaLimit` is misspelled. That is the real column name; renaming it is a
-  separate change.
 - `updatedAt` columns have no database default — they use `$defaultFn` +
   `$onUpdate` and are managed in the application.
 - `Quota.userId` is unique: one quota row per user, incremented across months.
@@ -118,6 +148,108 @@ Worth knowing:
 - Every foreign key to `user` cascades on delete.
 
 See `drizzle/README.md` for details.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    subgraph clients[" "]
+        direction TB
+        BROWSER["Dashboard<br/><i>React 19 · Next 16</i>"]
+        APP["Your app or service"]
+    end
+
+    subgraph pingx["pingX"]
+        direction TB
+        RPC["Hono RPC<br/><code>/api/[[...route]]</code><br/><i>session or API key</i>"]
+        INGEST["Ingestion API<br/><code>POST /api/v1/events</code><br/><i>API key</i>"]
+        AUTH["Better Auth<br/><code>/api/auth/*</code>"]
+        HOOK["Stripe webhook<br/><code>/api/webhooks/stripe</code>"]
+    end
+
+    DB[("Neon Postgres<br/><i>Drizzle · neon-http</i>")]
+    DISCORD["Discord API<br/><i>DM the user</i>"]
+    STRIPE["Stripe"]
+
+    BROWSER --> RPC
+    BROWSER --> AUTH
+    APP -->|"Bearer API key"| INGEST
+
+    RPC --> DB
+    AUTH --> DB
+    INGEST --> DB
+    INGEST -->|"embed"| DISCORD
+    HOOK --> DB
+    STRIPE -->|"checkout.session.completed"| HOOK
+    BROWSER -->|"checkout"| STRIPE
+```
+
+The ingestion path is the product: authenticate the key, check the quota, store
+the event, deliver it to Discord, then mark it `DELIVERED` or `FAILED`.
+
+## API reference
+
+### `POST /api/v1/events`
+
+Send an event. This is the only public API.
+
+**Authentication** — bearer token, using the key from `/dashboard/api-key`:
+
+```
+Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json
+```
+
+**Body**
+
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `category` | string | yes | Must be an existing category of yours. Letters, digits and hyphens only. |
+| `description` | string | no | Shown as the embed description. Defaults to `A new <category> event has occurred`. |
+| `data` | object | no | Flat key/value pairs. Values must be string, number or boolean — **nested objects and arrays are rejected**. Each key becomes a field in the Discord embed. |
+
+Unknown top-level fields are rejected — the schema is strict.
+
+```bash
+curl -X POST https://ping-x.netlify.app/api/v1/events \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "category": "sale",
+    "description": "New sale came in",
+    "data": { "plan": "PRO", "amount": 52.99, "email": "you@example.com" }
+  }'
+```
+
+**Responses**
+
+| Code | Meaning | Body |
+| --- | --- | --- |
+| `200` | Stored and delivered | `{ "message": "Event processed successfully", "eventId": "..." }` |
+| `400` | Body was not valid JSON | `{ "message": "Invalid request body" }` |
+| `401` | Missing, malformed or unknown API key | `{ "message": "Unauthorized" }` / `{ "message": "Invalid API key" }` |
+| `403` | No Discord ID saved on the account | `{ "message": "Please enter your discord ID in your account settings" }` |
+| `404` | No category of that name | `{ "message": "You dont have a category named \"x\"" }` |
+| `422` | Body parsed but failed validation | `{ "message": "<validation detail>" }` |
+| `429` | Monthly quota reached | `{ "message": "Monthly quota reached. Please upgrade your plan for more events" }` |
+| `500` | Stored, but Discord delivery failed | `{ "message": "Error processing the event...", "eventId": "..." }` |
+
+A `500` still creates the event — it is stored with status `FAILED` and is
+visible on the category page. A `429` does not.
+
+**Limits** — `100` events/month and `3` categories on Free; `1,000` and `10` on
+Pro. Defined in `src/config.ts`.
+
+## Screenshots
+
+<!-- TODO: add screenshots.
+     Suggested set, 1280px wide, light and dark:
+       docs/screenshots/dashboard.png       — Account home with categories
+       docs/screenshots/category.png        — Event table with status badges
+       docs/screenshots/billing.png         — Plan strip and usage meters
+       docs/screenshots/discord.png         — A delivered embed in Discord -->
+
+_Coming soon._
 
 ## Testing
 
@@ -128,11 +260,26 @@ npm run test:coverage # v8 coverage
 ```
 
 Vitest, configured in `vitest.config.mts` with the same `@/` alias as
-`tsconfig.json`. Tests live in `tests/unit/` and are pure — no database, no
-network — so they run in CI without secrets.
+`tsconfig.json`. `tests/unit/` is pure — no database, no network — so it runs in
+CI without secrets. `tests/integration/` exercises quota rollover against a real
+database and skips itself unless `TEST_DATABASE_URL` is set; point it at a
+throwaway Neon branch, never at data you care about.
 
 CI (`.github/workflows/ci.yml`) runs typecheck → lint → test → build on Node 20
 and 22 for every pull request and every push to `main`.
+
+## Known limitations
+
+Deliberately scoped out rather than overlooked:
+
+- API keys cannot be rotated from the app, and they authorise account
+  operations rather than event ingestion alone.
+- There is no rate limiting on the ingestion endpoint.
+- Delivery is fire-and-forget: a failed Discord send is recorded as `FAILED` and
+  never retried.
+- `neon-http` issues one statement per round trip and cannot open a transaction,
+  so multi-step writes are not atomic. Quota accounting works around this with a
+  single upsert rather than a read-then-write.
 
 ## Learn more
 

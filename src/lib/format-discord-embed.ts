@@ -24,6 +24,3 @@ export const formatDiscordEmbed = ({
     inline: false,
   })),
 })
-
-export const formatEventMessage = (embed: APIEmbed): string =>
-  `${embed.title}\n\n${embed.description}`

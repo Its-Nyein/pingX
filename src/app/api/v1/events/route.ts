@@ -1,9 +1,14 @@
-import { FREE_QUOTA, PRO_QUOTA } from "@/config";
-import { db, events, quotas, users } from "@/db";
+import { db, events, users } from "@/db";
 import { DiscordClient } from "@/lib/discord-client";
-import { formatDiscordEmbed, formatEventMessage } from "@/lib/format-discord-embed";
+import { formatDiscordEmbed } from "@/lib/format-discord-embed";
+import {
+    crossedWarnThreshold,
+    getOrRollQuota,
+    incrementQuota,
+} from "@/lib/quota";
+import { sendQuotaWarning } from "@/lib/quota-warning";
 import { EVENT_CATEGORY_VALIDATOR } from "@/lib/validators/validator";
-import { and, eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { unknown, z } from "zod";
 
@@ -29,8 +34,6 @@ export const POST = async(req: NextRequest) => {
             return NextResponse.json({ message: "Invalid API key" }, { status: 401 });
         }
 
-        // Replaces `include: { eventCategories: true }` via the relational
-        // query API, so `user.eventCategories` keeps the same shape.
         const user = await db.query.users.findFirst({
             where: eq(users.apiKey, apiKey),
             with: {
@@ -46,28 +49,25 @@ export const POST = async(req: NextRequest) => {
             return NextResponse.json({ message: "Please enter your discord ID in your account settings" }, { status: 403 });
         }
 
-        // Actual Logic
-        const currentData = new Date();
-        const currentMonth = currentData.getMonth() + 1;
-        const currentYear = currentData.getFullYear();
+        const quota = await getOrRollQuota(user.id, user.plan);
 
-        const [quota] = await db
-            .select()
-            .from(quotas)
-            .where(
-                and(
-                    eq(quotas.userId, user.id),
-                    eq(quotas.month, currentMonth),
-                    eq(quotas.year, currentYear)
-                )
-            )
-            .limit(1)
-
-        const quotaLimit = user.plan === 'FREE' ? FREE_QUOTA.maxEventsPerMonth : PRO_QUOTA.maxEventsPerMonth;
-
-        // can throw 429 when quota is reached or need payment for plan upgrade
-        if(quota && quota.count >= quotaLimit) {
-            return NextResponse.json({ message: "Monthly quota reached. Please upgrade your plan for more events" }, { status: 429 });
+        if (quota.used >= quota.limit) {
+            return NextResponse.json(
+                {
+                    error: "Monthly quota reached. Please upgrade your plan for more events",
+                    limit: quota.limit,
+                    used: quota.used,
+                    resetsAt: quota.resetsAt.toISOString(),
+                },
+                {
+                    status: 429,
+                    headers: {
+                        "Retry-After": String(
+                            Math.max(1, Math.ceil((quota.resetsAt.getTime() - Date.now()) / 1000))
+                        ),
+                    },
+                }
+            );
         }
 
         const discord = new DiscordClient(process.env.DISCORD_BOT_TOKEN);
@@ -98,7 +98,6 @@ export const POST = async(req: NextRequest) => {
             .insert(events)
             .values({
                 name: category.name,
-                formattedMessage: formatEventMessage(eventData),
                 userId: user.id,
                 data: validationResult.data || {},
                 eventCategoryId: category.id
@@ -112,42 +111,39 @@ export const POST = async(req: NextRequest) => {
                 .update(events)
                 .set({ deliveryStatus: 'DELIVERED' })
                 .where(eq(events.id, event.id))
-
-            // The conflict target is "userId" alone, not (userId, month, year):
-            // a user has exactly one quota row, incremented across months
-            // rather than one row per month. That is the original behaviour and
-            // is preserved. The unique constraint it needs is created by
-            // drizzle/migrations/0000_init.sql.
-            await db
-                .insert(quotas)
-                .values({
-                    userId: user.id,
-                    month: currentMonth,
-                    year: currentYear,
-                    count: 1
-                })
-                .onConflictDoUpdate({
-                    target: quotas.userId,
-                    set: { count: sql`${quotas.count} + 1` }
-                })
         } catch (error) {
             await db
                 .update(events)
                 .set({ deliveryStatus: 'FAILED' })
                 .where(eq(events.id, event.id))
 
-            console.log(error);
+            console.error("[events] discord delivery failed", error);
             return NextResponse.json({
                 message: "Error processing the event. Please try again later",
                 eventId: event.id
             }, { status: 500 });
         }
 
+        try {
+            const { used, warned80 } = await incrementQuota(user.id);
+
+            if (crossedWarnThreshold(used, quota.limit, warned80)) {
+                await sendQuotaWarning({
+                    discord,
+                    channelId: dmChannel.id,
+                    userId: user.id,
+                    used,
+                    limit: quota.limit,
+                });
+            }
+        } catch (error) {
+            console.error("[events] metering failed after successful delivery", error);
+        }
+
         return NextResponse.json({ message: "Event processed successfully", eventId: event.id });
     } catch (error) {
         console.error(error);
 
-        //422 (Unprocessable Entity) status code means the server understands the content type of the request       entity 
         if (error instanceof z.ZodError) {
             return NextResponse.json({ message: error.message }, { status: 422 })
             }
@@ -156,5 +152,5 @@ export const POST = async(req: NextRequest) => {
             { message: "Internal server error" },
             { status: 500 }
         )
-    }    
+    }
 }

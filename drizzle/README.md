@@ -14,8 +14,8 @@ Four tables are owned by Better Auth (`user`, `session`, `account`,
 — `user` is shared).
 
 There is one user table, not two. Better Auth's core columns and pingX's
-application columns (`quotoaLimit`, `plan`, `apiKey`, `discordId`) live side by
-side on `user`. The application columns are declared twice: once as Drizzle
+application columns (`plan`, `apiKey`, `discordId`) live side by side on
+`user`. The application columns are declared twice: once as Drizzle
 columns in `src/db/schema/users.ts`, and once as `user.additionalFields` in
 `src/lib/auth.ts`. **Both must be updated together** — Better Auth validates
 writes against its own list, so a column that exists only in the Drizzle schema
@@ -33,8 +33,6 @@ rename migration and is not worth doing for its own sake.
 - `Quota.userId` is unique, so a user has one quota row. The earlier Prisma
   schema declared this constraint but never migrated it, which is why the quota
   upsert could not work against the old database. It is created properly here.
-- `quotoaLimit` is misspelled. That is the real column name; renaming it is a
-  separate change.
 - Every foreign key to `user` cascades on delete, so removing a user removes
   their sessions, accounts, categories, events and quota.
 
