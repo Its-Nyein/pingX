@@ -1,6 +1,7 @@
 import { FREE_QUOTA, PRO_QUOTA } from "@/config";
 import { db, events, quotas, users } from "@/db";
 import { DiscordClient } from "@/lib/discord-client";
+import { formatDiscordEmbed, formatEventMessage } from "@/lib/format-discord-embed";
 import { EVENT_CATEGORY_VALIDATOR } from "@/lib/validators/validator";
 import { and, eq, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
@@ -87,28 +88,17 @@ export const POST = async(req: NextRequest) => {
             return NextResponse.json({ message: `You dont have a category named "${validationResult.category}"` }, { status: 404 });
         }
 
-        // use fields instead of data
-        // The fields structure is only required by Discord when formatting messages.
-        const eventData = {
-            title: `${category.name.charAt(0).toUpperCase() + category.name.slice(1)}`,
-            description: validationResult.description || `A new ${category.name} event has occurred`,
-            timestamp: new Date().toISOString(),
-            fields: Object.entries(validationResult.data || {}).map(
-                ([key, value]) => {
-                    return {
-                        name: key,
-                        value: String(value),
-                        inline: false
-                    }
-                }
-            )
-        }
+        const eventData = formatDiscordEmbed({
+            categoryName: category.name,
+            description: validationResult.description,
+            data: validationResult.data,
+        })
 
         const [event] = await db
             .insert(events)
             .values({
                 name: category.name,
-                formattedMessage: `${eventData.title}\n\n${eventData.description}`,
+                formattedMessage: formatEventMessage(eventData),
                 userId: user.id,
                 data: validationResult.data || {},
                 eventCategoryId: category.id

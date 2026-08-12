@@ -1,5 +1,7 @@
 # pingX
 
+[![CI](https://github.com/itsnyein/pingX/actions/workflows/ci.yml/badge.svg)](https://github.com/itsnyein/pingX/actions/workflows/ci.yml)
+
 Next.js 16 App Router SaaS that turns API calls into Discord notifications.
 Better Auth for auth, Hono for the API layer, Drizzle ORM on Neon Postgres,
 Stripe for billing.
@@ -116,6 +118,21 @@ Worth knowing:
 - Every foreign key to `user` cascades on delete.
 
 See `drizzle/README.md` for details.
+
+## Testing
+
+```bash
+npm test              # run once
+npm run test:watch    # watch mode
+npm run test:coverage # v8 coverage
+```
+
+Vitest, configured in `vitest.config.mts` with the same `@/` alias as
+`tsconfig.json`. Tests live in `tests/unit/` and are pure — no database, no
+network — so they run in CI without secrets.
+
+CI (`.github/workflows/ci.yml`) runs typecheck → lint → test → build on Node 20
+and 22 for every pull request and every push to `main`.
 
 ## Learn more
 
