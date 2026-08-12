@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { PropsWithChildren, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,9 +28,18 @@ export const CreateEventCategoryModal = ({children}: PropsWithChildren) => {
         mutationFn: async (data: EventCategoryForm) => {
             await client.category.createEventCategory.$post(data)
         },
-        onSuccess: async () => {
+        onSuccess: async (_data, variables) => {
             queryClient.invalidateQueries({ queryKey: ["user-event-categories"]})
             setIsOpen(false)
+
+            toast.success("Category created", {
+                description: `"${variables.name.toLowerCase()}" is ready for events.`,
+            })
+        },
+        onError: (error) => {
+            toast.error("Couldn't create category", {
+                description: error.message,
+            })
         }
     })
 
@@ -39,7 +49,7 @@ export const CreateEventCategoryModal = ({children}: PropsWithChildren) => {
 
     const onSubmit = async (data: EventCategoryForm) => {
         createEventCategory(data, {
-            onSettled: () => reset()
+            onSuccess: () => reset()
         })
     }
 

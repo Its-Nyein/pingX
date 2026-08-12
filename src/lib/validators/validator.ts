@@ -9,5 +9,5 @@ export const DISCORD_ID_VALIDATOR = z
     .string()
     .regex(
         /^(?:\d{17,20})?$/,
-        "Discord ID must be 17-20 digits. Enable Developer Mode, then right-click yourself and choose Copy User ID."
+        "Discord ID must be 17-20 digits."
     )

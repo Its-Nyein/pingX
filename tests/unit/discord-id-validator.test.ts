@@ -18,9 +18,6 @@ describe("DISCORD_ID_VALIDATOR", () => {
     expect(accepts("1".repeat(21))).toBe(false)
   })
 
-  // The field starts empty for a user who has not connected Discord, and
-  // clearing it is how you disconnect. Rejecting "" would make the settings
-  // form unsavable on first visit.
   it("accepts an empty string, which means no Discord ID", () => {
     expect(accepts("")).toBe(true)
   })
@@ -37,11 +34,13 @@ describe("DISCORD_ID_VALIDATOR", () => {
     expect(accepts("123,456,789,012,345,678")).toBe(false)
   })
 
-  it("explains how to find the ID when it rejects", () => {
+  it("says what a valid ID looks like when it rejects", () => {
     const result = DISCORD_ID_VALIDATOR.safeParse("nope")
     expect(result.success).toBe(false)
     if (!result.success) {
-      expect(result.error.issues[0].message).toMatch(/Developer Mode/)
+      expect(result.error.issues[0].message).toBe(
+        "Discord ID must be 17-20 digits."
+      )
     }
   })
 })

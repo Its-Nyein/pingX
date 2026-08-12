@@ -10,11 +10,13 @@ import {
 import { eq, sql } from "drizzle-orm"
 
 export {
+  categoryLimitFor,
   crossedWarnThreshold,
   currentPeriod,
   isStale,
   limitFor,
   nextReset,
+  slotsRemaining,
   WARN_THRESHOLD,
   type QuotaPeriod,
 } from "@/lib/quota-period"
