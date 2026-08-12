@@ -26,25 +26,16 @@ export const SettingPageContent = ({
   const { mutate, isPending } = useMutation({
     mutationFn: async (discordId: string) => {
       const res = await client.project.setDiscordId.$post({ discordId })
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => null)
-        throw new Error(
-          (body as { message?: string } | null)?.message ??
-            "Could not save your Discord ID. Please try again."
-        )
-      }
-
       return await res.json()
     },
     onSuccess: (_data, discordId) => {
       setSavedDiscordId(discordId)
       toast.success("Discord ID saved", {
-        description: "Events will be delivered to your Discord DMs.",
+        description: "Events will arrive in your Discord DMs.",
       })
     },
     onError: (error) => {
-      toast.error("Could not save your Discord ID", {
+      toast.error("Couldn't save Discord ID", {
         description: error.message,
       })
     },

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { client } from "@/lib/client"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Inbox } from "lucide-react"
+import { toast } from "sonner"
 
 export const DashboardEmptyState = () => {
   const queryClient = useQueryClient()
@@ -14,6 +15,11 @@ export const DashboardEmptyState = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user-event-categories"] })
+    },
+    onError: (error) => {
+      toast.error("Couldn't add starter categories", {
+        description: error.message,
+      })
     },
   })
 

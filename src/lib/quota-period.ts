@@ -22,6 +22,12 @@ export const isStale = (
 export const limitFor = (plan: Plan): number =>
   plan === "PRO" ? PRO_QUOTA.maxEventsPerMonth : FREE_QUOTA.maxEventsPerMonth
 
+export const categoryLimitFor = (plan: Plan): number =>
+  plan === "PRO" ? PRO_QUOTA.maxEventCategories : FREE_QUOTA.maxEventCategories
+
+export const slotsRemaining = (used: number, limit: number): number =>
+  Math.max(0, limit - used)
+
 export const WARN_THRESHOLD = 0.8
 
 export const crossedWarnThreshold = (
