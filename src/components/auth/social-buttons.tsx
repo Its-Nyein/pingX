@@ -3,10 +3,15 @@
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { authClient } from "@/lib/auth-client"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
 type Provider = "google" | "github"
+
+const LABELS: Record<Provider, string> = {
+  google: "Google",
+  github: "GitHub",
+}
 
 const Spinner = () => (
   <svg className="size-5 animate-spin" viewBox="0 0 24 24">
@@ -36,14 +41,44 @@ export const SocialButtons = ({
 }) => {
   const [loading, setLoading] = useState<Provider | null>(null)
 
+  // Leaving for the provider is a full page navigation. Coming back through the
+  // browser's Back button restores this page from the bfcache with its state
+  // intact, so the spinner would keep running against a request that is over.
+  useEffect(() => {
+    const stop = () => setLoading(null)
+
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) stop()
+    }
+
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") stop()
+    }
+
+    window.addEventListener("pageshow", onPageShow)
+    document.addEventListener("visibilitychange", onVisibility)
+
+    return () => {
+      window.removeEventListener("pageshow", onPageShow)
+      document.removeEventListener("visibilitychange", onVisibility)
+    }
+  }, [])
+
   const handle = async (provider: Provider) => {
-    try {
-      setLoading(provider)
-      await authClient.signIn.social({ provider, callbackURL })
-    } catch (error) {
+    setLoading(provider)
+
+    const fail = (error: unknown) => {
       console.error(`${provider} sign in error:`, error)
-      toast.error(`Could not sign in with ${provider}. Please try again.`)
+      toast.error(`Could not sign in with ${LABELS[provider]}. Please try again.`)
       setLoading(null)
+    }
+
+    try {
+      // Better Auth reports a failed start in the result rather than throwing.
+      const { error } = await authClient.signIn.social({ provider, callbackURL })
+      if (error) fail(error)
+    } catch (error) {
+      fail(error)
     }
   }
 
