@@ -74,7 +74,7 @@ jobs:
             echo "configured=true" >> "$GITHUB_OUTPUT"
           else
             echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::NEON_API_KEY / NEON_PROJECT_ID not set — integration tests skipped."
+            echo "::notice::NEON_API_KEY / NEON_PROJECT_ID not set - integration tests skipped."
           fi
 
       - uses: actions/setup-node@v4

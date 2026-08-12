@@ -1,0 +1,2 @@
+CREATE INDEX "Event_eventCategoryId_createdAt_idx" ON "Event" USING btree ("eventCategoryId","createdAt" DESC NULLS LAST);--> statement-breakpoint
+CREATE INDEX "Event_userId_idx" ON "Event" USING btree ("userId");

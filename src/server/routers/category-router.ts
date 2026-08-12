@@ -170,8 +170,8 @@ export const categoryRouter = router({
         getEventsByCategoryName: privateProcedure
         .input(z.object({
                 name: EVENT_CATEGORY_VALIDATOR,
-                page: z.number(),
-                limit: z.number().max(50),
+                page: z.number().int().min(1),
+                limit: z.number().int().min(1).max(50),
                 timeRange: z.enum(["today", "week" , "month"])
             })
         )
@@ -217,7 +217,7 @@ export const categoryRouter = router({
                     .select()
                     .from(events)
                     .where(inRange)
-                    .orderBy(desc(events.createdAt))
+                    .orderBy(desc(events.createdAt), desc(events.id))
                     .offset((page - 1) * limit)
                     .limit(limit),
                 db

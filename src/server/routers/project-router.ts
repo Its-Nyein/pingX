@@ -3,6 +3,7 @@ import { privateProcedure } from "../procedures"
 import { db, eventCategories, users } from "@/db"
 import { FREE_QUOTA, PRO_QUOTA } from "@/config"
 import { getOrRollQuota } from "@/lib/quota"
+import { DISCORD_ID_VALIDATOR } from "@/lib/validators/validator"
 import { count, eq } from "drizzle-orm"
 import { z } from "zod"
 
@@ -29,7 +30,7 @@ export const projectRouter = router({
   }),
 
   setDiscordId: privateProcedure
-    .input(z.object({ discordId: z.string().max(20) }))
+    .input(z.object({ discordId: DISCORD_ID_VALIDATOR }))
     .mutation(async ({ c, ctx, input }) => {
       const { user } = ctx
       const { discordId } = input

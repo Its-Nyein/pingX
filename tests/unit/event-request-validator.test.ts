@@ -12,7 +12,7 @@ const REQUEST_VALIDATOR = z
   })
   .strict()
 
-describe("REQUEST_VALIDATOR — accepts", () => {
+describe("REQUEST_VALIDATOR - accepts", () => {
   it("a full payload with all optional fields", () => {
     const result = REQUEST_VALIDATOR.safeParse({
       category: "sale",
@@ -43,7 +43,7 @@ describe("REQUEST_VALIDATOR — accepts", () => {
   })
 })
 
-describe("REQUEST_VALIDATOR — rejects", () => {
+describe("REQUEST_VALIDATOR - rejects", () => {
   it("a missing category", () => {
     const result = REQUEST_VALIDATOR.safeParse({ description: "no category" })
 
@@ -60,7 +60,7 @@ describe("REQUEST_VALIDATOR — rejects", () => {
     expect(REQUEST_VALIDATOR.safeParse(null).success).toBe(false)
   })
 
-  it("a nested object inside data — only scalars are allowed", () => {
+  it("a nested object inside data - only scalars are allowed", () => {
     const result = REQUEST_VALIDATOR.safeParse({
       category: "sale",
       data: { nested: { deep: "value" } },

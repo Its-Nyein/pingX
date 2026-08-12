@@ -23,7 +23,7 @@ describe("currentPeriod", () => {
   })
 })
 
-describe("isStale — the bug this PR fixes", () => {
+describe("isStale - the bug this PR fixes", () => {
   const period = { year: 2026, month: 8 }
 
   it("is false within the same period, so the count keeps incrementing", () => {
