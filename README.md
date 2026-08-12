@@ -230,12 +230,16 @@ curl -X POST https://ping-x.netlify.app/api/v1/events \
 | `401` | Missing, malformed or unknown API key | `{ "message": "Unauthorized" }` / `{ "message": "Invalid API key" }` |
 | `403` | No Discord ID saved on the account | `{ "message": "Please enter your discord ID in your account settings" }` |
 | `404` | No category of that name | `{ "message": "You dont have a category named \"x\"" }` |
-| `422` | Body parsed but failed validation | `{ "message": "<validation detail>" }` |
+| `422` | Body failed validation, or Discord refused permanently - for example the recipient does not accept DMs | `{ "message": "<reason>" }` |
 | `429` | Monthly quota reached | `{ "message": "Monthly quota reached. Please upgrade your plan for more events" }` |
-| `500` | Stored, but Discord delivery failed | `{ "message": "Error processing the event...", "eventId": "..." }` |
+| `502` | Stored, but Discord delivery failed for a reason worth retrying - rate limit, 5xx, network | `{ "message": "Could not deliver the event to Discord...", "eventId": "..." }` |
 
-A `500` still creates the event - it is stored with status `FAILED` and is
-visible on the category page. A `429` does not.
+A `502` or a delivery-related `422` still creates the event - it is stored with
+status `FAILED`, the reason is kept on the row, and it is visible on the
+category page. A `429` does not create one.
+
+`@discordjs/rest` already retries 5xx and network failures in process and waits
+out rate limits, so a `502` means those attempts were exhausted.
 
 **Limits** - `100` events/month and `3` categories on Free; `1,000` and `10` on
 Pro. Defined in `src/config.ts`.

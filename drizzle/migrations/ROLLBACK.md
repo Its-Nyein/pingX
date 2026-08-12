@@ -106,3 +106,27 @@ DROP INDEX "Event_userId_idx";
 ```
 
 Loses nothing but the query plans.
+
+---
+
+## 0004_add_delivery_receipts
+
+**Forward**
+
+```sql
+ALTER TABLE "Event" ADD COLUMN "deliveredAt" timestamp(3);
+ALTER TABLE "Event" ADD COLUMN "lastError" text;
+```
+
+Purely additive and both nullable, so existing rows and the currently deployed
+build are unaffected. `deliveryStatus` recorded that a delivery failed but never
+why or when it succeeded, which left a `FAILED` event with nothing to act on.
+
+**Rollback**
+
+```sql
+ALTER TABLE "Event" DROP COLUMN "deliveredAt";
+ALTER TABLE "Event" DROP COLUMN "lastError";
+```
+
+Loses the diagnostics only. Delivery status itself is unaffected.

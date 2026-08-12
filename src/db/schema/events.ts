@@ -14,6 +14,8 @@ export const events = pgTable(
     name: text("name").notNull(),
     data: jsonb("data").notNull(),
     deliveryStatus: statusEnum("deliveryStatus").default("PENDING").notNull(),
+    deliveredAt: timestamp("deliveredAt", { precision: 3, mode: "date" }),
+    lastError: text("lastError"),
     userId: text("userId")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),

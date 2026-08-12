@@ -4,6 +4,7 @@ import { db, eventCategories, users } from "@/db"
 import { FREE_QUOTA, PRO_QUOTA } from "@/config"
 import { getOrRollQuota } from "@/lib/quota"
 import { DISCORD_ID_VALIDATOR } from "@/lib/validators/validator"
+import { generateApiKey } from "@/lib/api-key"
 import { count, eq } from "drizzle-orm"
 import { z } from "zod"
 
@@ -27,6 +28,14 @@ export const projectRouter = router({
       eventsLimit: quota.limit,
       resetDate: quota.resetsAt,
     })
+  }),
+
+  rotateApiKey: privateProcedure.mutation(async ({ c, ctx }) => {
+    const apiKey = generateApiKey()
+
+    await db.update(users).set({ apiKey }).where(eq(users.id, ctx.user.id))
+
+    return c.json({ apiKey })
   }),
 
   setDiscordId: privateProcedure

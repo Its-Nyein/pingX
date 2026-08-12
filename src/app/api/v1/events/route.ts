@@ -1,6 +1,7 @@
 import { db, events, users } from "@/db";
 import { DiscordClient } from "@/lib/discord-client";
 import { formatDiscordEmbed } from "@/lib/format-discord-embed";
+import { deliver } from "@/lib/delivery";
 import {
     crossedWarnThreshold,
     getOrRollQuota,
@@ -104,25 +105,28 @@ export const POST = async(req: NextRequest) => {
             })
             .returning()
 
-        try {
-            await discord.sendEmbed(dmChannel.id, eventData);
+        const outcome = await deliver(discord, dmChannel.id, eventData);
 
+        if (!outcome.delivered) {
             await db
                 .update(events)
-                .set({ deliveryStatus: 'DELIVERED' })
-                .where(eq(events.id, event.id))
-        } catch (error) {
-            await db
-                .update(events)
-                .set({ deliveryStatus: 'FAILED' })
+                .set({ deliveryStatus: 'FAILED', lastError: outcome.reason })
                 .where(eq(events.id, event.id))
 
-            console.error("[events] discord delivery failed", error);
+            console.error("[events] discord delivery failed", outcome.reason);
+
             return NextResponse.json({
-                message: "Error processing the event. Please try again later",
+                message: outcome.permanent
+                    ? outcome.reason
+                    : "Could not deliver the event to Discord. It has been stored and can be resent.",
                 eventId: event.id
-            }, { status: 500 });
+            }, { status: outcome.permanent ? 422 : 502 });
         }
+
+        await db
+            .update(events)
+            .set({ deliveryStatus: 'DELIVERED', deliveredAt: outcome.at, lastError: null })
+            .where(eq(events.id, event.id))
 
         try {
             const { used, warned80 } = await incrementQuota(user.id);
