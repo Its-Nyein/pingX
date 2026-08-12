@@ -72,7 +72,7 @@ callback URL `<BETTER_AUTH_URL>/api/auth/callback/<provider>` with each.
 
 ### One user table
 
-pingX's application columns (`quotoaLimit`, `plan`, `apiKey`, `discordId`) live
+pingX's application columns (`plan`, `apiKey`, `discordId`) live
 on Better Auth's `user` table rather than in a separate table. That means a
 session read already carries them and no join or second query is needed:
 
@@ -141,8 +141,6 @@ rename a column.
 
 Worth knowing:
 
-- `quotoaLimit` is misspelled. That is the real column name; renaming it is a
-  separate change.
 - `updatedAt` columns have no database default — they use `$defaultFn` +
   `$onUpdate` and are managed in the application.
 - `Quota.userId` is unique: one quota row per user, incremented across months.

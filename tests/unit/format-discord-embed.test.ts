@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest"
-import {
-  formatDiscordEmbed,
-  formatEventMessage,
-} from "@/lib/format-discord-embed"
+import { formatDiscordEmbed } from "@/lib/format-discord-embed"
 
 const AT = new Date("2026-08-11T12:45:00.000Z")
 
@@ -100,25 +97,5 @@ describe("formatDiscordEmbed — timestamp", () => {
     const at = new Date(embed.timestamp!).getTime()
     expect(at).toBeGreaterThanOrEqual(before)
     expect(at).toBeLessThanOrEqual(after)
-  })
-})
-
-describe("formatEventMessage", () => {
-  it("joins title and description with a blank line, as the stored formattedMessage did", () => {
-    const embed = formatDiscordEmbed({
-      categoryName: "sale",
-      description: "New sale came in",
-      timestamp: AT,
-    })
-
-    expect(formatEventMessage(embed)).toBe("Sale\n\nNew sale came in")
-  })
-
-  it("uses the generated description in the message when none was supplied", () => {
-    const embed = formatDiscordEmbed({ categoryName: "sale", timestamp: AT })
-
-    expect(formatEventMessage(embed)).toBe(
-      "Sale\n\nA new sale event has occurred"
-    )
   })
 })

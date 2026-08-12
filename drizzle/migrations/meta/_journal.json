@@ -8,6 +8,20 @@
       "when": 1786431651643,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1786507219961,
+      "tag": "0001_add_quota_warned80",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786507234369,
+      "tag": "0002_drop_dead_columns",
+      "breakpoints": true
     }
   ]
 }

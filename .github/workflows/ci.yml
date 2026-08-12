@@ -54,3 +54,66 @@ jobs:
           STRIPE_SECRET_KEY: sk_test_ci_placeholder
           STRIPE_WEBHOOK_SECRET: whsec_ci_placeholder
           DISCORD_BOT_TOKEN: ci-placeholder-token
+
+  integration:
+    name: integration (ephemeral neon branch)
+    runs-on: ubuntu-latest
+    # Fork PRs cannot read secrets. Skip rather than fail red on a contribution.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check whether Neon is configured
+        id: guard
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+        run: |
+          if [ -n "$NEON_API_KEY" ] && [ -n "$NEON_PROJECT_ID" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::NEON_API_KEY / NEON_PROJECT_ID not set — integration tests skipped."
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.guard.outputs.configured == 'true'
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        if: steps.guard.outputs.configured == 'true'
+        run: npm ci
+
+      - name: Create Neon branch
+        id: branch
+        if: steps.guard.outputs.configured == 'true'
+        uses: neondatabase/create-branch-action@v5
+        with:
+          project_id: ${{ secrets.NEON_PROJECT_ID }}
+          branch_name: ci-${{ github.run_id }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+
+      - name: Push schema to the branch
+        if: steps.guard.outputs.configured == 'true'
+        run: npm run db:push -- --force
+        env:
+          DATABASE_URL: ${{ steps.branch.outputs.db_url_with_pooler }}
+
+      - name: Integration tests
+        if: steps.guard.outputs.configured == 'true'
+        run: npm test
+        env:
+          TEST_DATABASE_URL: ${{ steps.branch.outputs.db_url_with_pooler }}
+
+      # always(), so a failed test still tears the branch down rather than
+      # leaving one per run behind.
+      - name: Delete Neon branch
+        if: always() && steps.guard.outputs.configured == 'true'
+        uses: neondatabase/delete-branch-action@v3
+        with:
+          project_id: ${{ secrets.NEON_PROJECT_ID }}
+          branch: ci-${{ github.run_id }}
+          api_key: ${{ secrets.NEON_API_KEY }}
