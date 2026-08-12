@@ -160,7 +160,7 @@ async function main() {
   console.log(`
 Try the ingestion API:
 
-  curl -X POST http:
+  curl -X POST http://localhost:3000/api/v1/events \\
     -H "Authorization: Bearer ${user.apiKey}" \\
     -H "Content-Type: application/json" \\
     -d '{"category":"sale","data":{"plan":"PRO","amount":52.99}}'
