@@ -16,7 +16,8 @@
     "stripe:listen": "stripe listen --forward-to localhost:3000/api/webhooks/stripe",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test": "vitest run"
+    "test": "vitest run",
+    "db:seed": "tsx scripts/seed.ts"
   },
   "dependencies": {
     "@discordjs/rest": "^2.6.3",

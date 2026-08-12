@@ -1,21 +1,23 @@
 # Security Policy
 
-## Supported Versions
+pingX is a personal project. There is no production deployment holding other
+people's data, so this policy is short.
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+## Reporting
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+Please do not open a public issue for a security problem. Report privately
+through
+[GitHub private vulnerability reporting](https://github.com/itsnyein/pingX/security/advisories/new),
+or email **nyeinphyoaung.edu@gmail.com** with `[pingX security]` in the subject.
+Steps to reproduce and the affected commit are the two things that help most.
 
-## Reporting a Vulnerability
+I will acknowledge within a week. Fixes land on `main`; there are no backport
+branches.
 
-Use this section to tell people how to report a vulnerability.
+## Scope
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+Authentication and session handling, cross-account access, the event ingestion
+API and its key handling, the Stripe webhook signature check, and secret
+exposure in responses, logs or the client bundle. Vulnerabilities in Neon,
+Stripe, Discord or Netlify belong to those vendors. See **Known limitations** in
+`README.md` for gaps that are already known and intentional.
