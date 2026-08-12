@@ -21,6 +21,8 @@ export const useSignOut = () => {
       return
     }
 
+    toast.success("Signed out.")
+
     router.push("/")
     router.refresh()
   }
