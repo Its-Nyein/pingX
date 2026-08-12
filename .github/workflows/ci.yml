@@ -1,0 +1,119 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: verify (node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      # Placeholder values only. The build imports modules that construct
+      # clients at module scope (Stripe throws on an empty key, Better Auth
+      # reads its secret), so the variables must be present and well-formed.
+      # No real credentials are needed: nothing here contacts an external
+      # service during `next build`.
+      - name: Build
+        run: npm run build
+        env:
+          DATABASE_URL: postgres://user:pass@localhost:5432/pingx
+          BETTER_AUTH_SECRET: ci-placeholder-secret-value-32-chars-min
+          BETTER_AUTH_URL: http://localhost:3000
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+          STRIPE_SECRET_KEY: sk_test_ci_placeholder
+          STRIPE_WEBHOOK_SECRET: whsec_ci_placeholder
+          DISCORD_BOT_TOKEN: ci-placeholder-token
+
+  integration:
+    name: integration (ephemeral neon branch)
+    runs-on: ubuntu-latest
+    # Fork PRs cannot read secrets. Skip rather than fail red on a contribution.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check whether Neon is configured
+        id: guard
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+        run: |
+          if [ -n "$NEON_API_KEY" ] && [ -n "$NEON_PROJECT_ID" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::NEON_API_KEY / NEON_PROJECT_ID not set — integration tests skipped."
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.guard.outputs.configured == 'true'
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        if: steps.guard.outputs.configured == 'true'
+        run: npm ci
+
+      - name: Create Neon branch
+        id: branch
+        if: steps.guard.outputs.configured == 'true'
+        uses: neondatabase/create-branch-action@v5
+        with:
+          project_id: ${{ secrets.NEON_PROJECT_ID }}
+          branch_name: ci-${{ github.run_id }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+
+      - name: Push schema to the branch
+        if: steps.guard.outputs.configured == 'true'
+        run: npm run db:push -- --force
+        env:
+          DATABASE_URL: ${{ steps.branch.outputs.db_url_with_pooler }}
+
+      - name: Integration tests
+        if: steps.guard.outputs.configured == 'true'
+        run: npm test
+        env:
+          TEST_DATABASE_URL: ${{ steps.branch.outputs.db_url_with_pooler }}
+
+      # always(), so a failed test still tears the branch down rather than
+      # leaving one per run behind.
+      - name: Delete Neon branch
+        if: always() && steps.guard.outputs.configured == 'true'
+        uses: neondatabase/delete-branch-action@v3
+        with:
+          project_id: ${{ secrets.NEON_PROJECT_ID }}
+          branch: ci-${{ github.run_id }}
+          api_key: ${{ secrets.NEON_API_KEY }}

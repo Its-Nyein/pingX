@@ -1,0 +1,1 @@
+ALTER TABLE "Quota" ADD COLUMN "warned80" boolean DEFAULT false NOT NULL;
