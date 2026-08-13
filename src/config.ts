@@ -12,3 +12,9 @@ export const FREE_QUOTA = {
     requestsPerMinute: 60,
     testEventsPerMinute: 5,
   } as const
+
+  export const RETENTION = {
+    freeDays: 30,
+    proDays: 365,
+    graceDays: 30,
+  } as const

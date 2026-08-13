@@ -42,7 +42,7 @@ const EVENT_SHAPES: Record<CategoryName, () => Record<string, string | number | 
 }
 
 const EVENT_COUNT = 50
-const SPREAD_DAYS = 60
+const SPREAD_DAYS = 25
 
 function rand(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min

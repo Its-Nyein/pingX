@@ -48,7 +48,7 @@ for throwaway data.
 npm run db:seed
 ```
 
-Creates a demo account, three categories and ~50 events spread over 60 days with
+Creates a demo account, three categories and ~50 events spread over 25 days with
 mixed delivery statuses, then prints the credentials and API key. Idempotent,
 and it refuses to run when `NODE_ENV=production`.
 
@@ -254,7 +254,8 @@ category page. A `429` does not create one.
 out rate limits, so a `502` means those attempts were exhausted.
 
 **Limits** - `100` events/month and `3` categories on Free; `1,000` and `10` on
-Pro. Defined in `src/config.ts`.
+Pro. Free keeps `30` days of event history, Pro keeps `1` year. Defined in
+`src/config.ts`.
 
 ### `GET /api/v1/events`
 

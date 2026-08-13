@@ -1,6 +1,6 @@
 import { PageBody } from "@/components/shell/page-body"
 import { PageHeader } from "@/components/shell/page-header"
-import { FREE_QUOTA, PRO_QUOTA, RATE_LIMIT } from "@/config"
+import { FREE_QUOTA, PRO_QUOTA, RATE_LIMIT, RETENTION } from "@/config"
 import { appUrl } from "@/lib/app-url"
 import { requireUser } from "@/lib/session"
 import Link from "next/link"
@@ -134,6 +134,11 @@ const Page = async () => {
               {PRO_QUOTA.maxEventsPerMonth} across{" "}
               {PRO_QUOTA.maxEventCategories}. The monthly count resets at the
               start of each calendar month, UTC.
+            </p>
+            <p>
+              Free keeps {RETENTION.freeDays} days of event history and Pro keeps
+              a year. Older events stop appearing in the dashboard and the API,
+              and are deleted {RETENTION.graceDays} days after that.
             </p>
             <p>
               Every plan is limited to {RATE_LIMIT.requestsPerMinute} requests a

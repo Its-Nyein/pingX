@@ -10,6 +10,7 @@ import { consumeRateLimit } from "@/lib/rate-limit";
 import { RATE_LIMIT } from "@/config";
 import { isUniqueViolation } from "@/lib/db-error";
 import { isSearchable, likePattern } from "@/lib/search";
+import { retentionCutoff } from "@/lib/retention";
 import { DiscordClient } from "@/lib/discord-client";
 import { deliver } from "@/lib/delivery";
 import { formatDiscordEmbed, type EventData } from "@/lib/format-discord-embed";
@@ -33,7 +34,12 @@ export const categoryRouter = router({
 
         const categoryIds = categories.map((category) => category.id)
 
-        const ownedEvents = inArray(events.eventCategoryId, categoryIds)
+        const retainedFrom = retentionCutoff(ctx.user.plan, now)
+
+        const ownedEvents = and(
+            inArray(events.eventCategoryId, categoryIds),
+            gte(events.createdAt, retainedFrom)
+        )
 
         const totalsQuery = db
             .select({
@@ -205,7 +211,12 @@ export const categoryRouter = router({
                 const [{value: eventsCount}] = await db
                     .select({value: count()})
                     .from(events)
-                    .where(eq(events.eventCategoryId, category.id))
+                    .where(
+                        and(
+                            eq(events.eventCategoryId, category.id),
+                            gte(events.createdAt, retentionCutoff(ctx.user.plan))
+                        )
+                    )
 
                 const hasEvents = eventsCount > 0;
                 return c.json({ hasEvents })
@@ -339,7 +350,8 @@ export const categoryRouter = router({
                     .where(
                         and(
                             inArray(events.eventCategoryId, categoryIds),
-                            gte(events.createdAt, startDate)
+                            gte(events.createdAt, startDate),
+                            gte(events.createdAt, retentionCutoff(ctx.user.plan, now))
                         )
                     )
                     .groupBy(sql`1`)
@@ -449,9 +461,12 @@ export const categoryRouter = router({
                     )
                 )
 
+            const retainedFrom = retentionCutoff(ctx.user.plan, now)
+
             const inRange = and(
                 inArray(events.eventCategoryId, categoryIds),
                 gte(events.createdAt, startDate),
+                gte(events.createdAt, retainedFrom),
                 status ? eq(events.deliveryStatus, status) : undefined,
                 search && isSearchable(search)
                     ? sql`${events.data}::text ILIKE ${likePattern(search)}`

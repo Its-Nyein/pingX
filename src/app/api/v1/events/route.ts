@@ -5,6 +5,7 @@ import { deliver } from "@/lib/delivery";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import { decodeCursor, encodeCursor } from "@/lib/cursor";
 import { isSearchable, likePattern } from "@/lib/search";
+import { retentionCutoff } from "@/lib/retention";
 import { createLogger, newRequestId } from "@/lib/logger";
 import {
     crossedWarnThreshold,
@@ -13,7 +14,7 @@ import {
 } from "@/lib/quota";
 import { sendQuotaWarning } from "@/lib/quota-warning";
 import { EVENT_CATEGORY_VALIDATOR } from "@/lib/validators/validator";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, gte, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { unknown, z } from "zod";
 
@@ -85,7 +86,7 @@ export const GET = async (req: NextRequest) => {
         }
 
         const [user] = await db
-            .select({ id: users.id })
+            .select({ id: users.id, plan: users.plan })
             .from(users)
             .where(eq(users.apiKey, auth.apiKey))
             .limit(1);
@@ -104,7 +105,10 @@ export const GET = async (req: NextRequest) => {
             return NextResponse.json({ message: "Invalid cursor" }, { status: 400 });
         }
 
-        const filters = [eq(events.userId, user.id)];
+        const filters = [
+            eq(events.userId, user.id),
+            gte(events.createdAt, retentionCutoff(user.plan)),
+        ];
 
         if (params.status) filters.push(eq(events.deliveryStatus, params.status));
         if (params.category) filters.push(eq(events.name, params.category));
