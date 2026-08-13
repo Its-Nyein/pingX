@@ -54,7 +54,11 @@ const Page = async (props: PageProps) => {
             />
 
             <PageBody>
-                <CategoryPageContent hasEvents={hasEvents} category={category}/>
+                <CategoryPageContent
+                    hasEvents={hasEvents}
+                    hasDiscordId={Boolean(user.discordId)}
+                    category={category}
+                />
             </PageBody>
         </>
     )

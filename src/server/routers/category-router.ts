@@ -6,6 +6,8 @@ import { and, count, countDistinct, desc, eq, gte, inArray, sql } from "drizzle-
 import { z } from "zod";
 import { EVENT_CATEGORY_VALIDATOR } from "@/lib/validators/validator";
 import { categoryLimitFor, slotsRemaining } from "@/lib/quota";
+import { consumeRateLimit } from "@/lib/rate-limit";
+import { RATE_LIMIT } from "@/config";
 import { isUniqueViolation } from "@/lib/db-error";
 import { DiscordClient } from "@/lib/discord-client";
 import { deliver } from "@/lib/delivery";
@@ -206,6 +208,96 @@ export const categoryRouter = router({
 
                 const hasEvents = eventsCount > 0;
                 return c.json({ hasEvents })
+            }),
+
+        sendTestEvent: privateProcedure
+            .input(z.object({ name: EVENT_CATEGORY_VALIDATOR }))
+            .mutation(async ({c, ctx, input}) => {
+                const { user } = ctx
+
+                if (!user.discordId) {
+                    throw new HTTPException(400, {
+                        message: "Add your Discord ID in settings before sending a test event."
+                    })
+                }
+
+                const rate = await consumeRateLimit(
+                    `test:${user.id}`,
+                    RATE_LIMIT.testEventsPerMinute
+                )
+
+                if (!rate.allowed) {
+                    throw new HTTPException(429, {
+                        message: `Only ${rate.limit} test events a minute. Try again in ${rate.retryAfter}s.`
+                    })
+                }
+
+                const [category] = await db
+                    .select()
+                    .from(eventCategories)
+                    .where(
+                        and(
+                            eq(eventCategories.name, input.name),
+                            eq(eventCategories.userId, user.id)
+                        )
+                    )
+                    .limit(1)
+
+                if (!category) {
+                    throw new HTTPException(404, {
+                        message: `You do not have a category named "${input.name}".`
+                    })
+                }
+
+                const data = {
+                    test: true,
+                    source: "pingX dashboard",
+                }
+
+                const [event] = await db
+                    .insert(events)
+                    .values({
+                        name: category.name,
+                        userId: user.id,
+                        data,
+                        eventCategoryId: category.id,
+                    })
+                    .returning()
+
+                const discord = new DiscordClient(process.env.DISCORD_BOT_TOKEN)
+                const dmChannel = await discord.createDM(user.discordId)
+
+                const outcome = await deliver(
+                    discord,
+                    dmChannel.id,
+                    formatDiscordEmbed({
+                        categoryName: category.name,
+                        description: "Test event sent from your pingX dashboard.",
+                        data,
+                    })
+                )
+
+                if (!outcome.delivered) {
+                    await db
+                        .update(events)
+                        .set({ deliveryStatus: "FAILED", lastError: outcome.reason })
+                        .where(eq(events.id, event.id))
+
+                    throw new HTTPException(outcome.permanent ? 422 : 502, {
+                        message: outcome.reason
+                    })
+                }
+
+                await db
+                    .update(events)
+                    .set({
+                        deliveryStatus: "DELIVERED",
+                        deliveredAt: outcome.at,
+                        lastError: null,
+                    })
+                    .where(eq(events.id, event.id))
+
+                return c.json({ eventId: event.id })
             }),
 
         resendEvent: privateProcedure

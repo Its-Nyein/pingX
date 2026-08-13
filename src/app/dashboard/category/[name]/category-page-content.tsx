@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button"
 import { FilterToolbar } from "@/components/shell/filter-toolbar"
 import { MetricPanel } from "@/components/shell/metric-panel"
 import { StatusBadge } from "@/components/shell/status-badge"
+import { SendTestEventButton } from "@/components/shell/send-test-event-button"
 import {
   Table,
   TableBody,
@@ -34,6 +35,13 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
+const RESERVED_COLUMN_IDS = new Set([
+  "category",
+  "createdAt",
+  "deliveryStatus",
+  "actions",
+])
+
 const RANGE_LABEL = {
   today: "today",
   week: "this week",
@@ -42,11 +50,13 @@ const RANGE_LABEL = {
 
 interface CategoryPageContentProps {
   hasEvents: boolean
+  hasDiscordId: boolean
   category: EventCategory
 }
 
 export const CategoryPageContent = ({
   hasEvents: intitialHasEvents,
+  hasDiscordId,
   category,
 }: CategoryPageContentProps) => {
   const searchParams = useSearchParams()
@@ -215,7 +225,9 @@ export const CategoryPageContent = ({
         },
       },
       ...(data?.events[0]
-        ? Object.keys(data.events[0].data as object).map((field) => ({
+        ? Object.keys(data.events[0].data as object)
+            .filter((field) => !RESERVED_COLUMN_IDS.has(field))
+            .map((field) => ({
             accessorFn: (row: Event) =>
               (row.data as Record<string, any>)[field],
             header: field,
@@ -296,7 +308,13 @@ export const CategoryPageContent = ({
   }, [pagination, router])
 
   if (!pollingData.hasEvents) {
-    return <EmptyCategoryState categoryName={category.name} />
+    return (
+      <EmptyCategoryState
+        categoryName={category.name}
+        hasDiscordId={hasDiscordId}
+        onSent={() => refetch()}
+      />
+    )
   }
 
   return (
@@ -317,7 +335,7 @@ export const CategoryPageContent = ({
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             <MetricPanel
               label="Total events"
-              value={data?.eventsCount ?? 0}
+              value={data ? data.eventsCount : "-"}
               hint={RANGE_LABEL[activeTab]}
               icon={BarChart}
             />
@@ -337,6 +355,13 @@ export const CategoryPageContent = ({
               <h2 className="text-lg font-semibold tracking-tight text-foreground">
                 Event overview
               </h2>
+
+              <SendTestEventButton
+                categoryName={category.name}
+                hasDiscordId={hasDiscordId}
+                size="sm"
+                onSent={() => refetch()}
+              />
             </FilterToolbar>
 
             <div className="overflow-hidden rounded-md border border-border bg-card">
