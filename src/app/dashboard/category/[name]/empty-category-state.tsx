@@ -1,4 +1,8 @@
+"use client"
+
 import { Card } from "@/components/ui/card"
+import { SendTestEventButton } from "@/components/shell/send-test-event-button"
+import { useState } from "react"
 import { appUrl } from "@/lib/app-url"
 import Link from "next/link"
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
@@ -6,9 +10,14 @@ import { atomDark } from "react-syntax-highlighter/dist/esm/styles/prism"
 
 export const EmptyCategoryState = ({
   categoryName,
+  hasDiscordId,
+  onSent,
 }: {
   categoryName: string
+  hasDiscordId: boolean
+  onSent?: () => void
 }) => {
+  const [sent, setSent] = useState(false)
   const baseUrl = appUrl()
 
   const codeSnippet = `await fetch('${baseUrl}/api/v1/events', {
@@ -32,11 +41,26 @@ export const EmptyCategoryState = ({
       className="flex-1 flex items-center justify-center"
     >
       <h2 className="text-xl/8 font-medium text-center tracking-tight text-foreground">
-        Create your first {categoryName} event
+        {sent
+          ? "That is pingX working"
+          : `Create your first ${categoryName} event`}
       </h2>
-      <p className="text-sm/6 text-muted-foreground mb-8 max-w-md text-center text-pretty">
-        Get started by sending a request to our tracking API:
+      <p className="text-sm/6 text-muted-foreground mb-6 max-w-md text-center text-pretty">
+        {sent
+          ? "Now send one from your app:"
+          : "Send one from here to see it arrive, then wire it into your app:"}
       </p>
+
+      <div className="mb-8">
+        <SendTestEventButton
+          categoryName={categoryName}
+          hasDiscordId={hasDiscordId}
+          onSent={() => {
+            setSent(true)
+            onSent?.()
+          }}
+        />
+      </div>
 
       <div className="w-full max-w-3xl bg-card rounded-lg shadow-lg overflow-hidden">
         <div className="bg-recessed border-b border-border px-4 py-2 flex justify-between items-center">

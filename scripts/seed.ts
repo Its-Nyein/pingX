@@ -7,6 +7,7 @@ import { and, eq } from "drizzle-orm"
 const SEED_EMAIL = process.env.SEED_EMAIL ?? "demo@pingx.local"
 const SEED_PASSWORD = process.env.SEED_PASSWORD ?? "Demo1234!@#"
 const SEED_NAME = "pingX Demo"
+const SEED_DISCORD_ID = process.env.SEED_DISCORD_ID
 
 const CATEGORIES = [
   { name: "sale", emoji: "💰" },
@@ -94,6 +95,20 @@ async function main() {
   }
 
   console.log(`${createdUser ? "Created" : "Reusing"} user ${user.id}`)
+
+  if (SEED_DISCORD_ID && user.discordId !== SEED_DISCORD_ID) {
+    await db
+      .update(users)
+      .set({ discordId: SEED_DISCORD_ID })
+      .where(eq(users.id, user.id))
+
+    user = { ...user, discordId: SEED_DISCORD_ID }
+    console.log(`Discord ID set to ${SEED_DISCORD_ID}`)
+  } else if (!SEED_DISCORD_ID && !user.discordId) {
+    console.log(
+      "No SEED_DISCORD_ID set - delivery and the test-event button stay disabled."
+    )
+  }
 
   for (const { name } of CATEGORIES) {
     await db
