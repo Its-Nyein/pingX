@@ -430,7 +430,7 @@ export const categoryRouter = router({
                 limit: z.number().int().min(1).max(50),
                 timeRange: z.enum(["today", "week" , "month"]),
                 search: z.string().max(100).optional(),
-                status: z.enum(["PENDING", "DELIVERED", "FAILED"]).optional()
+                status: z.array(z.enum(["PENDING", "DELIVERED", "FAILED"])).optional()
             })
         )
         .query(async ({c, ctx, input}) => {
@@ -463,13 +463,21 @@ export const categoryRouter = router({
 
             const retainedFrom = retentionCutoff(ctx.user.plan, now)
 
-            const inRange = and(
+            const matchesSearch = search && isSearchable(search)
+                ? sql`(${events.data}::text ILIKE ${likePattern(search)} OR ${events.name} ILIKE ${likePattern(search)})`
+                : undefined
+
+            const beforeStatus = and(
                 inArray(events.eventCategoryId, categoryIds),
                 gte(events.createdAt, startDate),
                 gte(events.createdAt, retainedFrom),
-                status ? eq(events.deliveryStatus, status) : undefined,
-                search && isSearchable(search)
-                    ? sql`${events.data}::text ILIKE ${likePattern(search)}`
+                matchesSearch
+            )
+
+            const inRange = and(
+                beforeStatus,
+                status && status.length
+                    ? inArray(events.deliveryStatus, status)
                     : undefined
             )
 
@@ -481,7 +489,16 @@ export const categoryRouter = router({
                 .where(inRange)
                 .as("range_field_keys")
 
-            const [eventList, eventsCount, uniqueFieldCount] = await Promise.all([
+            const statusCountsQuery = db
+                .select({
+                    status: events.deliveryStatus,
+                    value: count(),
+                })
+                .from(events)
+                .where(beforeStatus)
+                .groupBy(events.deliveryStatus)
+
+            const [eventList, eventsCount, uniqueFieldCount, statusRows] = await Promise.all([
                 db
                     .select()
                     .from(events)
@@ -497,11 +514,17 @@ export const categoryRouter = router({
                 db
                     .select({ value: countDistinct(rangeFieldKeys.key) })
                     .from(rangeFieldKeys)
-                    .then(([row]) => row?.value ?? 0)
+                    .then(([row]) => row?.value ?? 0),
+                statusCountsQuery
             ])
+
+            const statusCounts = Object.fromEntries(
+                statusRows.map((row) => [row.status, row.value])
+            ) as Record<string, number>
             return c.superjson({
                 events: eventList,
                 eventsCount,
+                statusCounts,
                 uniqueFieldCount
             })
         })
