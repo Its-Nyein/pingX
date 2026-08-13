@@ -74,7 +74,7 @@ export const DashboardContent = () => {
                                 <div className="mb-4 flex items-center gap-4">
                                     <div>
                                         <h3 className="text-base font-semibold tracking-tight text-foreground">{category.name}</h3>
-                                        <p className="text-sm text-muted-foreground">{format(category.createdAt, "MM d, yyyy")}</p>
+                                        <p className="text-sm text-muted-foreground">{format(category.createdAt, "MMM d, yyyy")}</p>
                                     </div>
                                 </div>
 
@@ -139,9 +139,10 @@ export const DashboardContent = () => {
                 title="Delete category"
                 description={
                     <>
-                        Are you sure you want to delete the{" "}
+                        Deleting the{" "}
                         <span className="font-medium text-foreground">{deletingCategory}</span>{" "}
-                        category? This action cannot be undone.
+                        category also deletes every event it has received. This
+                        cannot be undone.
                     </>
                 }
                 confirmLabel="Delete"

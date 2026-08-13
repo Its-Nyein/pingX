@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils"
 import { SearchTrigger } from "@/components/shell/command-search"
-import { Gem, Home, Key, LucideIcon, Settings } from "lucide-react"
+import { BookOpen, Gem, Home, Key, LifeBuoy, LucideIcon, Settings } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
@@ -27,6 +27,13 @@ export const SIDEBAR_ITEMS: SidebarSection[] = [
       { href: "/dashboard/upgrade", icon: Gem, text: "Billing" },
       { href: "/dashboard/api-key", icon: Key, text: "Tokens" },
       { href: "/dashboard/account-settings", icon: Settings, text: "Settings" },
+    ],
+  },
+  {
+    category: "Help",
+    items: [
+      { href: "/dashboard/docs", icon: BookOpen, text: "Documentation" },
+      { href: "/dashboard/support", icon: LifeBuoy, text: "Support" },
     ],
   },
 ]

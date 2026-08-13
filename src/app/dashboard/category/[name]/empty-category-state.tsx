@@ -1,4 +1,6 @@
 import { Card } from "@/components/ui/card"
+import { appUrl } from "@/lib/app-url"
+import Link from "next/link"
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
 import { atomDark } from "react-syntax-highlighter/dist/esm/styles/prism"
 
@@ -7,7 +9,7 @@ export const EmptyCategoryState = ({
 }: {
   categoryName: string
 }) => {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
+  const baseUrl = appUrl()
 
   const codeSnippet = `await fetch('${baseUrl}/api/v1/events', {
   method: 'POST',
@@ -37,11 +39,11 @@ export const EmptyCategoryState = ({
       </p>
 
       <div className="w-full max-w-3xl bg-card rounded-lg shadow-lg overflow-hidden">
-        <div className="bg-gray-800 px-4 py-2 flex justify-between items-center">
+        <div className="bg-recessed border-b border-border px-4 py-2 flex justify-between items-center">
           <div className="flex space-x-2">
-            <div className="size-3 rounded-full bg-red-500" />
-            <div className="size-3 rounded-full bg-yellow-500" />
-            <div className="size-3 rounded-full bg-green-500" />
+            <div className="size-3 rounded-full bg-danger" />
+            <div className="size-3 rounded-full bg-warning" />
+            <div className="size-3 rounded-full bg-success" />
           </div>
 
           <span className="text-muted-foreground text-sm">your-event.js</span>
@@ -64,7 +66,7 @@ export const EmptyCategoryState = ({
 
       <div className="mt-8 flex flex-col items-center space-x-2">
         <div className="flex gap-2 items-center">
-          <div className="size-2 bg-green-500 rounded-full animate-pulse" />
+          <div className="size-2 bg-success rounded-full animate-pulse" />
           <span className="text-sm text-muted-foreground">
             Listening to incoming events...
           </span>
@@ -72,13 +74,13 @@ export const EmptyCategoryState = ({
 
         <p className="text-sm/6 text-muted-foreground mt-2">
           Need help? Check out our{" "}
-          <a href="#" className="text-blue-600 hover:underline">
+          <Link href="/dashboard/docs" className="text-link hover:underline">
             documentation
-          </a>{" "}
+          </Link>{" "}
           or{" "}
-          <a href="#" className="text-blue-600 hover:underline">
+          <Link href="/dashboard/support" className="text-link hover:underline">
             contact support
-          </a>
+          </Link>
           .
         </p>
       </div>
