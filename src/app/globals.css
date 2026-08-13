@@ -36,6 +36,8 @@ layer(base);
     --warning: oklch(47% 0.157 37.304);
     --warning-tint: oklch(93.1% 0.107 94.6 / 0.2);
     --danger: oklch(50.5% 0.213 27.518);
+    --chart-delivered: oklch(58% 0.15 166);
+    --chart-failed: oklch(55% 0.21 27);
     --danger-tint: oklch(93.6% 0.032 17.7 / 0.42);
     --info: oklch(42.4% 0.199 265.638);
     --info-tint: oklch(93.2% 0.032 255.6 / 0.45);
@@ -84,6 +86,8 @@ layer(base);
     --warning: oklch(75% 0.183 55.934);
     --warning-tint: oklch(35.3% 0.079 65 / 0.37);
     --danger: oklch(70.4% 0.191 22.216);
+    --chart-delivered: oklch(64% 0.145 166);
+    --chart-failed: oklch(60% 0.2 25);
     --danger-tint: oklch(42.9% 0.176 28.7 / 0.17);
     --info: oklch(70.7% 0.165 254.624);
     --info-tint: oklch(38% 0.145 265.5 / 0.22);
@@ -145,6 +149,8 @@ layer(base);
   --color-link: var(--link);
 
   --color-cloudflare-orange: var(--cloudflare-orange);
+  --color-chart-delivered: var(--chart-delivered);
+  --color-chart-failed: var(--chart-failed);
 
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);

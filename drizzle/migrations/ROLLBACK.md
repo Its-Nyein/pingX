@@ -223,3 +223,30 @@ DROP TABLE "WebhookEvent";
 
 Loses the record of which events were processed, so a Stripe retry after that
 point would be handled again.
+
+---
+
+## 0009_add_event_data_search_index
+
+**Forward**
+
+```sql
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE INDEX "Event_data_trgm_idx" ON "Event" USING gin (("data"::text) gin_trgm_ops);
+```
+
+Purely additive. Search matches against the jsonb payload rendered as text, and
+a trigram GIN index is what makes `ILIKE '%term%'` use an index rather than
+scanning every row. drizzle-kit generates the index but not the extension that
+provides `gin_trgm_ops`, so the `CREATE EXTENSION` line is added by hand - the
+migration fails without it.
+
+**Rollback**
+
+```sql
+DROP INDEX "Event_data_trgm_idx";
+```
+
+Leave the extension: dropping it would break any other index that comes to rely
+on it, and it costs nothing idle. Search keeps working without the index, just
+with a sequential scan.

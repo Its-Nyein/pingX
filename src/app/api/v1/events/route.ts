@@ -3,6 +3,9 @@ import { DiscordClient } from "@/lib/discord-client";
 import { formatDiscordEmbed } from "@/lib/format-discord-embed";
 import { deliver } from "@/lib/delivery";
 import { consumeRateLimit } from "@/lib/rate-limit";
+import { decodeCursor, encodeCursor } from "@/lib/cursor";
+import { isSearchable, likePattern } from "@/lib/search";
+import { retentionCutoff } from "@/lib/retention";
 import { createLogger, newRequestId } from "@/lib/logger";
 import {
     crossedWarnThreshold,
@@ -11,7 +14,7 @@ import {
 } from "@/lib/quota";
 import { sendQuotaWarning } from "@/lib/quota-warning";
 import { EVENT_CATEGORY_VALIDATOR } from "@/lib/validators/validator";
-import { eq } from "drizzle-orm";
+import { and, desc, eq, gte, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { unknown, z } from "zod";
 
@@ -32,6 +35,136 @@ const REQUEST_VALIDATOR = z.object({
         .optional(),
     description: z.string().max(MAX_VALUE_LENGTH).optional(),
 }).strict();
+
+const LIST_VALIDATOR = z.object({
+    category: EVENT_CATEGORY_VALIDATOR.optional(),
+    status: z.enum(["PENDING", "DELIVERED", "FAILED"]).optional(),
+    limit: z.coerce.number().int().min(1).max(100).default(30),
+    cursor: z.string().min(1).optional(),
+    search: z.string().max(100).optional(),
+});
+
+const apiKeyFrom = (req: NextRequest) => {
+    const authHeader = req.headers.get('Authorization');
+
+    if (!authHeader) {
+        return { error: NextResponse.json({ message: "Unauthorized" }, { status: 401 }) };
+    }
+
+    if (!authHeader.startsWith('Bearer ')) {
+        return {
+            error: NextResponse.json(
+                { message: "Invalid auth header format. Expected: 'Bearer [API_KEY]'" },
+                { status: 401 }
+            )
+        };
+    }
+
+    const apiKey = authHeader.split('Bearer ')[1];
+
+    if (!apiKey || apiKey.trim() === '') {
+        return { error: NextResponse.json({ message: "Invalid API key" }, { status: 401 }) };
+    }
+
+    return { apiKey };
+};
+
+export const GET = async (req: NextRequest) => {
+    const log = createLogger("events", { requestId: newRequestId() });
+
+    try {
+        const auth = apiKeyFrom(req);
+        if (auth.error) return auth.error;
+
+        const rate = await consumeRateLimit(auth.apiKey);
+
+        if (!rate.allowed) {
+            return NextResponse.json(
+                { message: `Rate limit of ${rate.limit} requests per minute exceeded` },
+                { status: 429, headers: { "Retry-After": String(rate.retryAfter) } }
+            );
+        }
+
+        const [user] = await db
+            .select({ id: users.id, plan: users.plan })
+            .from(users)
+            .where(eq(users.apiKey, auth.apiKey))
+            .limit(1);
+
+        if (!user) {
+            return NextResponse.json({ message: "Invalid API key" }, { status: 401 });
+        }
+
+        const params = LIST_VALIDATOR.parse(
+            Object.fromEntries(req.nextUrl.searchParams)
+        );
+
+        const cursor = params.cursor ? decodeCursor(params.cursor) : null;
+
+        if (params.cursor && !cursor) {
+            return NextResponse.json({ message: "Invalid cursor" }, { status: 400 });
+        }
+
+        const filters = [
+            eq(events.userId, user.id),
+            gte(events.createdAt, retentionCutoff(user.plan)),
+        ];
+
+        if (params.status) filters.push(eq(events.deliveryStatus, params.status));
+        if (params.category) filters.push(eq(events.name, params.category));
+
+        if (params.search && isSearchable(params.search)) {
+            filters.push(sql`${events.data}::text ILIKE ${likePattern(params.search)}`);
+        }
+
+        if (cursor) {
+            filters.push(
+                sql`(${events.createdAt}, ${events.id}) < (${cursor.createdAt.toISOString()}::timestamp(3), ${cursor.id})`
+            );
+        }
+
+        const rows = await db
+            .select({
+                id: events.id,
+                category: events.name,
+                data: events.data,
+                deliveryStatus: events.deliveryStatus,
+                deliveredAt: events.deliveredAt,
+                lastError: events.lastError,
+                createdAt: events.createdAt,
+            })
+            .from(events)
+            .where(and(...filters))
+            .orderBy(desc(events.createdAt), desc(events.id))
+            .limit(params.limit + 1);
+
+        const hasMore = rows.length > params.limit;
+        const page = hasMore ? rows.slice(0, params.limit) : rows;
+        const last = page.at(-1);
+
+        return NextResponse.json({
+            events: page,
+            nextCursor:
+                hasMore && last
+                    ? encodeCursor({ createdAt: last.createdAt, id: last.id })
+                    : null,
+        });
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return NextResponse.json(
+                { message: error.issues.map((issue) => issue.message).join("; ") },
+                { status: 422 }
+            );
+        }
+
+        log.error("listing events failed", { error });
+
+        return NextResponse.json(
+            { message: "Internal server error" },
+            { status: 500 }
+        );
+    }
+};
 
 export const POST = async(req: NextRequest) => {
     const log = createLogger("events", { requestId: newRequestId() });
@@ -111,8 +244,6 @@ export const POST = async(req: NextRequest) => {
         let requestData: unknown;
 
         try {
-            // Content-Length can be absent or wrong, so the body is measured
-            // as it is read rather than trusted from the header.
             const raw = await req.text();
 
             if (raw.length > MAX_BODY_BYTES) {

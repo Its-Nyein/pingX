@@ -9,6 +9,8 @@ import { categoryLimitFor, slotsRemaining } from "@/lib/quota";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import { RATE_LIMIT } from "@/config";
 import { isUniqueViolation } from "@/lib/db-error";
+import { isSearchable, likePattern } from "@/lib/search";
+import { retentionCutoff } from "@/lib/retention";
 import { DiscordClient } from "@/lib/discord-client";
 import { deliver } from "@/lib/delivery";
 import { formatDiscordEmbed, type EventData } from "@/lib/format-discord-embed";
@@ -32,7 +34,12 @@ export const categoryRouter = router({
 
         const categoryIds = categories.map((category) => category.id)
 
-        const ownedEvents = inArray(events.eventCategoryId, categoryIds)
+        const retainedFrom = retentionCutoff(ctx.user.plan, now)
+
+        const ownedEvents = and(
+            inArray(events.eventCategoryId, categoryIds),
+            gte(events.createdAt, retainedFrom)
+        )
 
         const totalsQuery = db
             .select({
@@ -204,7 +211,12 @@ export const categoryRouter = router({
                 const [{value: eventsCount}] = await db
                     .select({value: count()})
                     .from(events)
-                    .where(eq(events.eventCategoryId, category.id))
+                    .where(
+                        and(
+                            eq(events.eventCategoryId, category.id),
+                            gte(events.createdAt, retentionCutoff(ctx.user.plan))
+                        )
+                    )
 
                 const hasEvents = eventsCount > 0;
                 return c.json({ hasEvents })
@@ -300,6 +312,54 @@ export const categoryRouter = router({
                 return c.json({ eventId: event.id })
             }),
 
+        getEventSeries: privateProcedure
+            .input(z.object({
+                name: EVENT_CATEGORY_VALIDATOR,
+                timeRange: z.enum(["today", "week", "month"]),
+            }))
+            .query(async ({c, ctx, input}) => {
+                const { name, timeRange } = input
+
+                const now = new Date()
+                const startDate =
+                    timeRange === "today"
+                        ? startOfDay(now)
+                        : timeRange === "week"
+                          ? startOfWeek(now, { weekStartsOn: 0 })
+                          : startOfMonth(now)
+
+                const categoryIds = db
+                    .select({ id: eventCategories.id })
+                    .from(eventCategories)
+                    .where(
+                        and(
+                            eq(eventCategories.name, name),
+                            eq(eventCategories.userId, ctx.user.id)
+                        )
+                    )
+
+                const bucket = timeRange === "today" ? "hour" : "day"
+
+                const rows = await db
+                    .select({
+                        bucket: sql<string>`date_trunc(${bucket}, ${events.createdAt})::text`,
+                        delivered: sql<number>`count(*) filter (where ${events.deliveryStatus} = 'DELIVERED')`.mapWith(Number),
+                        failed: sql<number>`count(*) filter (where ${events.deliveryStatus} = 'FAILED')`.mapWith(Number),
+                    })
+                    .from(events)
+                    .where(
+                        and(
+                            inArray(events.eventCategoryId, categoryIds),
+                            gte(events.createdAt, startDate),
+                            gte(events.createdAt, retentionCutoff(ctx.user.plan, now))
+                        )
+                    )
+                    .groupBy(sql`1`)
+                    .orderBy(sql`1`)
+
+                return c.superjson({ series: rows, bucket })
+            }),
+
         resendEvent: privateProcedure
             .input(z.object({ eventId: z.string().min(1) }))
             .mutation(async ({c, ctx, input}) => {
@@ -368,11 +428,13 @@ export const categoryRouter = router({
                 name: EVENT_CATEGORY_VALIDATOR,
                 page: z.number().int().min(1),
                 limit: z.number().int().min(1).max(50),
-                timeRange: z.enum(["today", "week" , "month"])
+                timeRange: z.enum(["today", "week" , "month"]),
+                search: z.string().max(100).optional(),
+                status: z.array(z.enum(["PENDING", "DELIVERED", "FAILED"])).optional()
             })
         )
         .query(async ({c, ctx, input}) => {
-            const {name, page, limit, timeRange} = input;
+            const {name, page, limit, timeRange, search, status} = input;
 
             const now = new Date()
             let startDate: Date
@@ -399,9 +461,24 @@ export const categoryRouter = router({
                     )
                 )
 
-            const inRange = and(
+            const retainedFrom = retentionCutoff(ctx.user.plan, now)
+
+            const matchesSearch = search && isSearchable(search)
+                ? sql`(${events.data}::text ILIKE ${likePattern(search)} OR ${events.name} ILIKE ${likePattern(search)})`
+                : undefined
+
+            const beforeStatus = and(
                 inArray(events.eventCategoryId, categoryIds),
-                gte(events.createdAt, startDate)
+                gte(events.createdAt, startDate),
+                gte(events.createdAt, retainedFrom),
+                matchesSearch
+            )
+
+            const inRange = and(
+                beforeStatus,
+                status && status.length
+                    ? inArray(events.deliveryStatus, status)
+                    : undefined
             )
 
             const rangeFieldKeys = db
@@ -412,7 +489,16 @@ export const categoryRouter = router({
                 .where(inRange)
                 .as("range_field_keys")
 
-            const [eventList, eventsCount, uniqueFieldCount] = await Promise.all([
+            const statusCountsQuery = db
+                .select({
+                    status: events.deliveryStatus,
+                    value: count(),
+                })
+                .from(events)
+                .where(beforeStatus)
+                .groupBy(events.deliveryStatus)
+
+            const [eventList, eventsCount, uniqueFieldCount, statusRows] = await Promise.all([
                 db
                     .select()
                     .from(events)
@@ -428,11 +514,17 @@ export const categoryRouter = router({
                 db
                     .select({ value: countDistinct(rangeFieldKeys.key) })
                     .from(rangeFieldKeys)
-                    .then(([row]) => row?.value ?? 0)
+                    .then(([row]) => row?.value ?? 0),
+                statusCountsQuery
             ])
+
+            const statusCounts = Object.fromEntries(
+                statusRows.map((row) => [row.status, row.value])
+            ) as Record<string, number>
             return c.superjson({
                 events: eventList,
                 eventsCount,
+                statusCounts,
                 uniqueFieldCount
             })
         })

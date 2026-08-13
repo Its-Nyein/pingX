@@ -1,4 +1,5 @@
 import { createId } from "@paralleldrive/cuid2"
+import { sql } from "drizzle-orm"
 import { index, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core"
 
 import { statusEnum } from "./enums"
@@ -38,6 +39,10 @@ export const events = pgTable(
       table.createdAt.desc()
     ),
     index("Event_userId_idx").on(table.userId),
+    index("Event_data_trgm_idx").using(
+      "gin",
+      sql`(${table.data}::text) gin_trgm_ops`
+    ),
   ]
 )
 

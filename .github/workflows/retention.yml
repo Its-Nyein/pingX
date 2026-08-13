@@ -1,0 +1,38 @@
+name: retention
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  sweep:
+    name: delete events past their window
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check whether the sweep is configured
+        id: guard
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APP_URL: ${{ secrets.APP_URL }}
+        run: |
+          if [ -n "$CRON_SECRET" ] && [ -n "$APP_URL" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::CRON_SECRET / APP_URL not set - retention sweep skipped."
+          fi
+
+      - name: Sweep
+        if: steps.guard.outputs.configured == 'true'
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APP_URL: ${{ secrets.APP_URL }}
+        run: |
+          response=$(curl -sS -w "\n%{http_code}" -X POST "$APP_URL/api/cron/retention" \
+            -H "Authorization: Bearer $CRON_SECRET")
+          body=$(echo "$response" | head -n -1)
+          status=$(echo "$response" | tail -n 1)
+          echo "$body"
+          [ "$status" = "200" ] || { echo "::error::sweep returned $status"; exit 1; }

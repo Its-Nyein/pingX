@@ -1,6 +1,6 @@
 import { PageBody } from "@/components/shell/page-body"
 import { PageHeader } from "@/components/shell/page-header"
-import { FREE_QUOTA, PRO_QUOTA, RATE_LIMIT } from "@/config"
+import { FREE_QUOTA, PRO_QUOTA, RATE_LIMIT, RETENTION } from "@/config"
 import { appUrl } from "@/lib/app-url"
 import { requireUser } from "@/lib/session"
 import Link from "next/link"
@@ -108,6 +108,25 @@ const Page = async () => {
             </dl>
           </Section>
 
+          <Section title="Read your events back">
+            <p>
+              <Code>GET /api/v1/events</Code> lists your events newest first,
+              with the same key and the same rate limit. Filter with{" "}
+              <Code>category</Code>, <Code>status</Code> and <Code>search</Code>{" "}
+              - a substring match against the payload, two characters or more -
+              and page with{" "}
+              <Code>limit</Code> (1-100, default 30) and the <Code>cursor</Code>{" "}
+              returned as <Code>nextCursor</Code>.
+            </p>
+            <Block>{`curl "${base}/api/v1/events?status=FAILED&limit=50" \\
+  -H "Authorization: Bearer YOUR_API_KEY"`}</Block>
+            <p>
+              Paging is keyset rather than offset, so pages cannot repeat or skip
+              rows when new events arrive while you are reading.{" "}
+              <Code>nextCursor</Code> is <Code>null</Code> on the last page.
+            </p>
+          </Section>
+
           <Section title="Limits">
             <p>
               Free allows {FREE_QUOTA.maxEventsPerMonth} events a month across{" "}
@@ -115,6 +134,11 @@ const Page = async () => {
               {PRO_QUOTA.maxEventsPerMonth} across{" "}
               {PRO_QUOTA.maxEventCategories}. The monthly count resets at the
               start of each calendar month, UTC.
+            </p>
+            <p>
+              Free keeps {RETENTION.freeDays} days of event history and Pro keeps
+              a year. Older events stop appearing in the dashboard and the API,
+              and are deleted {RETENTION.graceDays} days after that.
             </p>
             <p>
               Every plan is limited to {RATE_LIMIT.requestsPerMinute} requests a

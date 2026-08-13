@@ -82,6 +82,12 @@ export const UpgradePageContent = ({ plan }: { plan: Plan }) => {
       <div className="space-y-5">
         {usageData ? (
           <>
+            <p className="text-xs text-muted-foreground">
+              {plan === "PRO"
+                ? "Pro keeps 1 year of event history."
+                : "Free keeps 30 days of event history. Pro keeps 1 year."}
+            </p>
+
             <Meter
               label="Events this period"
               value={usageData.eventsUsed}

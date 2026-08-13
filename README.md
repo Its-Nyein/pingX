@@ -48,7 +48,7 @@ for throwaway data.
 npm run db:seed
 ```
 
-Creates a demo account, three categories and ~50 events spread over 60 days with
+Creates a demo account, three categories and ~50 events spread over 25 days with
 mixed delivery statuses, then prints the credentials and API key. Idempotent,
 and it refuses to run when `NODE_ENV=production`.
 
@@ -254,7 +254,46 @@ category page. A `429` does not create one.
 out rate limits, so a `502` means those attempts were exhausted.
 
 **Limits** - `100` events/month and `3` categories on Free; `1,000` and `10` on
-Pro. Defined in `src/config.ts`.
+Pro. Free keeps `30` days of event history, Pro keeps `1` year. Defined in
+`src/config.ts`.
+
+### `GET /api/v1/events`
+
+Read your events back. Same bearer key, same rate limit.
+
+```bash
+curl "https://ping-x.netlify.app/api/v1/events?category=sale&status=FAILED&limit=50" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+| Query | Meaning |
+| --- | --- |
+| `category` | Only this category |
+| `status` | `PENDING`, `DELIVERED` or `FAILED` |
+| `limit` | 1-100, default 30 |
+| `search` | Substring match against the event payload, 2 characters or more |
+| `cursor` | `nextCursor` from the previous page |
+
+```json
+{
+  "events": [
+    {
+      "id": "evt_...",
+      "category": "sale",
+      "data": { "plan": "PRO" },
+      "deliveryStatus": "FAILED",
+      "deliveredAt": null,
+      "lastError": "The recipient does not accept direct messages from this server.",
+      "createdAt": "2026-08-12T10:00:00.000Z"
+    }
+  ],
+  "nextCursor": "MjAyNi0wOC0xMlQxMDowMDowMC4wMDBafGV2dF8x"
+}
+```
+
+Pagination is keyset, not offset: the cursor carries the last row's
+`(createdAt, id)`, so pages cannot repeat or skip rows when new events arrive
+mid-read. `nextCursor` is `null` on the last page.
 
 ## Screenshots
 
@@ -303,14 +342,19 @@ delivery is a no-op, and it handles `charge.refunded` and
 
 Deliberately scoped out rather than overlooked:
 
-- API keys cannot be rotated from the app, and they authorise account
-  operations rather than event ingestion alone.
-- There is no rate limiting on the ingestion endpoint.
-- Delivery is fire-and-forget: a failed Discord send is recorded as `FAILED` and
-  never retried.
+- **Delivery is a direct message to the account owner.** There is no channel or
+  team target yet, so pingX cannot serve a group. A Discord channel webhook is
+  the cheap version of that and is planned before Slack or email.
+- **Nothing deletes events.** `Event` grows forever. A per-plan retention window
+  is designed but not built.
+- **A test event does not count against quota**, because it is the product
+  proving itself rather than usage. It is still a real event, so Billing and the
+  dashboard card differ by one after each test: Billing reads the quota counter,
+  the card counts rows. That is deliberate, not drift.
 - `neon-http` issues one statement per round trip and cannot open a transaction,
   so multi-step writes are not atomic. Quota accounting works around this with a
-  single upsert rather than a read-then-write.
+  single upsert rather than a read-then-write; event insert and status update
+  remain two statements.
 
 ## Learn more
 

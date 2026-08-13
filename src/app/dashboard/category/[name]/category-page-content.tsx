@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { client } from "@/lib/client"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowUpDown, BarChart, RotateCcw } from "lucide-react"
+import { ArrowUpDown, BarChart, CheckCircle2, CircleDashed, RotateCcw, Search as SearchIcon, X, XCircle } from "lucide-react"
 import { isAfter, isToday, startOfMonth, startOfWeek } from "date-fns"
 import {
   ColumnDef,
@@ -22,10 +22,13 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { FilterToolbar } from "@/components/shell/filter-toolbar"
 import { MetricPanel } from "@/components/shell/metric-panel"
 import { StatusBadge } from "@/components/shell/status-badge"
 import { SendTestEventButton } from "@/components/shell/send-test-event-button"
+import { EventChart } from "@/components/shell/event-chart"
+import { FacetedFilter } from "@/components/shell/faceted-filter"
 import {
   Table,
   TableBody,
@@ -34,6 +37,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+
+const STATUS_OPTIONS = [
+  { label: "Delivered", value: "DELIVERED", icon: CheckCircle2 },
+  { label: "Failed", value: "FAILED", icon: XCircle },
+  { label: "Pending", value: "PENDING", icon: CircleDashed },
+]
 
 const RESERVED_COLUMN_IDS = new Set([
   "category",
@@ -85,6 +94,27 @@ export const CategoryPageContent = ({
     refetchInterval: (query) => (query.state.data?.hasEvents ? false : 1000),
   })
 
+  const [search, setSearch] = useState("")
+  const [debouncedSearch, setDebouncedSearch] = useState("")
+  const [statuses, setStatuses] = useState<Status[]>([])
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300)
+    return () => clearTimeout(timer)
+  }, [search])
+
+  const { data: seriesData } = useQuery({
+    queryKey: ["event-series", category.name, activeTab],
+    queryFn: async () => {
+      const res = await client.category.getEventSeries.$get({
+        name: category.name,
+        timeRange: activeTab,
+      })
+      return await res.json()
+    },
+    enabled: pollingData.hasEvents,
+  })
+
   const { data, isFetching, refetch } = useQuery({
     queryKey: [
       "events",
@@ -92,6 +122,8 @@ export const CategoryPageContent = ({
       pagination.pageIndex,
       pagination.pageSize,
       activeTab,
+      debouncedSearch,
+      statuses,
     ],
     queryFn: async () => {
       const res = await client.category.getEventsByCategoryName.$get({
@@ -99,6 +131,8 @@ export const CategoryPageContent = ({
         page: pagination.pageIndex + 1,
         limit: pagination.pageSize,
         timeRange: activeTab,
+        ...(debouncedSearch ? { search: debouncedSearch } : {}),
+        ...(statuses.length ? { status: statuses } : {}),
       })
 
       return await res.json()
@@ -344,6 +378,11 @@ export const CategoryPageContent = ({
           </div>
 
           <div className="space-y-3">
+            <EventChart
+              series={seriesData?.series ?? []}
+              bucket={(seriesData?.bucket as "hour" | "day") ?? "day"}
+            />
+
             <FilterToolbar
               trailing={
                 <span>
@@ -352,9 +391,46 @@ export const CategoryPageContent = ({
                 </span>
               }
             >
-              <h2 className="text-lg font-semibold tracking-tight text-foreground">
-                Event overview
-              </h2>
+              <div className="relative">
+                <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value)
+                    setPagination((p) => ({ ...p, pageIndex: 0 }))
+                  }}
+                  placeholder="Search category, email, any field"
+                  aria-label="Search events"
+                  className="h-8 w-56 pl-8 lg:w-72"
+                />
+              </div>
+
+              <FacetedFilter
+                title="Status"
+                options={STATUS_OPTIONS}
+                selected={statuses}
+                counts={data?.statusCounts}
+                onChange={(values) => {
+                  setStatuses(values as Status[])
+                  setPagination((p) => ({ ...p, pageIndex: 0 }))
+                }}
+              />
+
+              {search || statuses.length ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8"
+                  onClick={() => {
+                    setSearch("")
+                    setStatuses([])
+                    setPagination((p) => ({ ...p, pageIndex: 0 }))
+                  }}
+                >
+                  Reset
+                  <X className="ml-1 size-4" />
+                </Button>
+              ) : null}
 
               <SendTestEventButton
                 categoryName={category.name}
