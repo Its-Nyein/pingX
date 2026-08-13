@@ -1,4 +1,4 @@
-import { db, users } from "@/db"
+import { db, users, webhookEvents } from "@/db"
 import { stripe } from "@/lib/stripe"
 import { eq } from "drizzle-orm"
 import { headers } from "next/headers"
@@ -30,17 +30,56 @@ export async function POST(req: Request) {
     return new Response("Invalid signature", { status: 400 })
   }
 
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object as Stripe.Checkout.Session
+  // Stripe retries any non-2xx, so a handler that is not idempotent runs
+  // again. Claiming the id first means a duplicate delivery does nothing.
+  const claimed = await db
+    .insert(webhookEvents)
+    .values({ id: event.id, type: event.type })
+    .onConflictDoNothing()
+    .returning({ id: webhookEvents.id })
 
-    const { userId } = session.metadata || { userId: null }
+  if (claimed.length === 0) {
+    return new Response("Already processed")
+  }
 
-    if (!userId) {
-      console.error("[stripe] checkout.session.completed without userId metadata")
-      return new Response("Invalid Metadata", { status: 400 })
+  try {
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object as Stripe.Checkout.Session
+
+      const { userId } = session.metadata || { userId: null }
+
+      if (!userId) {
+        console.error("[stripe] checkout.session.completed without userId metadata")
+        return new Response("Invalid Metadata", { status: 400 })
+      }
+
+      await db.update(users).set({ plan: "PRO" }).where(eq(users.id, userId))
     }
 
-    await db.update(users).set({ plan: "PRO" }).where(eq(users.id, userId))
+    // A refund or a won dispute means the customer no longer paid for Pro.
+    // Without these the plan never returns to FREE.
+    if (event.type === "charge.refunded" || event.type === "charge.dispute.created") {
+      const charge =
+        event.type === "charge.refunded"
+          ? (event.data.object as Stripe.Charge)
+          : ((event.data.object as Stripe.Dispute).charge as Stripe.Charge | string)
+
+      const chargeId = typeof charge === "string" ? charge : charge.id
+      const full = await stripe.charges.retrieve(chargeId)
+      const userId = full.metadata?.userId
+
+      if (!userId) {
+        console.error(`[stripe] ${event.type} without userId metadata`, chargeId)
+        return new Response("OK")
+      }
+
+      await db.update(users).set({ plan: "FREE" }).where(eq(users.id, userId))
+    }
+  } catch (error) {
+    // Release the claim so Stripe's retry can have another go, otherwise a
+    // transient failure would be swallowed by the idempotency check.
+    await db.delete(webhookEvents).where(eq(webhookEvents.id, event.id))
+    throw error
   }
 
   return new Response("OK")

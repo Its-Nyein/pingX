@@ -12,6 +12,7 @@ import Link from "next/link"
 import { AnimatedList } from "@/components/ui/animated-list"
 import DiscordMessage from "@/components/discord-message"
 import { PINGX_AVATAR } from "@/lib/avatar"
+import { appUrl } from "@/lib/app-url"
 import { cn } from "@/lib/utils"
 import type { ComponentType, ReactNode } from "react"
 import { PrismLight as SyntaxHighlighter } from "react-syntax-highlighter"
@@ -95,7 +96,7 @@ const BentoCard = ({
 )
 
 const page = () => {
-  const codeSnippet = `await fetch("https://ping-x.netlify.app/api/v1/events", {
+  const codeSnippet = `await fetch("${appUrl()}/api/v1/events", {
     method: "POST",
     body: JSON.stringify({
       category: "sale",

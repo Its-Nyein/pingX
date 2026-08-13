@@ -1,13 +1,14 @@
 "use client"
 
 import type { Event, EventCategory, Status } from "@/db"
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
+import { toast } from "sonner"
 import { EmptyCategoryState } from "./empty-category-state"
 import { useEffect, useMemo, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { client } from "@/lib/client"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowUpDown, BarChart } from "lucide-react"
+import { ArrowUpDown, BarChart, RotateCcw } from "lucide-react"
 import { isAfter, isToday, startOfMonth, startOfWeek } from "date-fns"
 import {
   ColumnDef,
@@ -74,7 +75,7 @@ export const CategoryPageContent = ({
     refetchInterval: (query) => (query.state.data?.hasEvents ? false : 1000),
   })
 
-  const { data, isFetching } = useQuery({
+  const { data, isFetching, refetch } = useQuery({
     queryKey: [
       "events",
       category.name,
@@ -168,6 +169,25 @@ export const CategoryPageContent = ({
     })
   }
 
+  const [resendingId, setResendingId] = useState<string | null>(null)
+
+  const { mutate: resend } = useMutation({
+    mutationFn: async ({ eventId }: { eventId: string }) => {
+      setResendingId(eventId)
+      await client.category.resendEvent.$post({ eventId })
+    },
+    onSuccess: () => {
+      toast.success("Event resent", {
+        description: "It has been delivered to your Discord DMs.",
+      })
+      refetch()
+    },
+    onError: (error) => {
+      toast.error("Couldn't resend the event", { description: error.message })
+    },
+    onSettled: () => setResendingId(null),
+  })
+
   const columns: ColumnDef<Event>[] = useMemo(
     () => [
       {
@@ -206,12 +226,43 @@ export const CategoryPageContent = ({
       {
         accessorKey: "deliveryStatus",
         header: "Status",
-        cell: ({ row }) => (
-          <StatusBadge status={row.getValue<Status>("deliveryStatus")} />
-        ),
+        cell: ({ row }) => {
+          const status = row.getValue<Status>("deliveryStatus")
+          const lastError = row.original.lastError
+
+          return (
+            <div className="flex items-center gap-2">
+              <StatusBadge status={status} />
+              {status === "FAILED" && lastError ? (
+                <span
+                  title={lastError}
+                  className="max-w-56 truncate text-xs text-muted-foreground"
+                >
+                  {lastError}
+                </span>
+              ) : null}
+            </div>
+          )
+        },
+      },
+      {
+        id: "actions",
+        header: "",
+        cell: ({ row }) =>
+          row.getValue<Status>("deliveryStatus") === "DELIVERED" ? null : (
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={resendingId === row.original.id}
+              onClick={() => resend({ eventId: row.original.id })}
+            >
+              <RotateCcw className="size-3.5" />
+              {resendingId === row.original.id ? "Resending..." : "Resend"}
+            </Button>
+          ),
       },
     ],
-    [category.name, data?.events]
+    [category.name, data?.events, resend, resendingId]
   )
 
   const [sorting, setSorting] = useState<SortingState>([])

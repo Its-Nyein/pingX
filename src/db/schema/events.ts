@@ -21,7 +21,7 @@ export const events = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     eventCategoryId: text("eventCategoryId").references(
       () => eventCategories.id,
-      { onDelete: "set null" }
+      { onDelete: "cascade" }
     ),
     createdAt: timestamp("createdAt", { precision: 3, mode: "date" })
       .defaultNow()

@@ -130,3 +130,96 @@ ALTER TABLE "Event" DROP COLUMN "lastError";
 ```
 
 Loses the diagnostics only. Delivery status itself is unaffected.
+
+---
+
+## 0005_cascade_event_category_delete
+
+**Forward** - drops and recreates the `Event.eventCategoryId` foreign key with
+`ON DELETE CASCADE` in place of `ON DELETE SET NULL`.
+
+Deleting a category used to leave its events behind with a null category:
+unreachable from every dashboard query, uncounted, and permanent. Observed
+live, where deleting three demo categories stranded fifty events. Cascade makes
+the delete mean what the confirm dialog says it means.
+
+**Rollback**
+
+```sql
+ALTER TABLE "Event" DROP CONSTRAINT "Event_eventCategoryId_EventCategory_id_fk";
+ALTER TABLE "Event" ADD CONSTRAINT "Event_eventCategoryId_EventCategory_id_fk"
+  FOREIGN KEY ("eventCategoryId") REFERENCES "EventCategory"("id")
+  ON DELETE SET NULL ON UPDATE NO ACTION;
+```
+
+Reverting restores the orphaning behaviour; it does not bring back events that
+a cascade has already removed. There is no way to recover those, which is worth
+weighing before applying this against data you care about.
+
+---
+
+## 0006_add_rate_limits
+
+**Forward** - creates the `RateLimit` table: one row per API key holding the
+current fixed window and its request count.
+
+Purely additive, a new table nothing else references. Backed by Postgres rather
+than Redis on purpose: the project has no Redis credentials, and a rate limiter
+that silently does nothing is worse than none - the same trust problem as a
+green badge over tests that never run.
+
+**Rollback**
+
+```sql
+DROP TABLE "RateLimit";
+```
+
+Loses only the in-flight counters. The next request starts a fresh window.
+
+---
+
+## 0007_rate_limit_window_as_epoch
+
+**Forward** - replaces `RateLimit.windowStart` with a `bigint` holding epoch
+milliseconds. The column is dropped and re-added rather than cast: Postgres has
+no implicit `timestamp` to `bigint` conversion, and the generated `SET DATA
+TYPE` failed on that. The table is truncated first because it holds only
+in-flight counters, so there is nothing to preserve.
+
+`0006` stored the window as a timestamp, and the upsert compares the stored
+window against the current one to decide between incrementing and resetting.
+That comparison returned false for identical values: the driver's timestamp
+serialization does not round-trip through the parameter binding, so every
+second request reset its own counter and the limit never applied. An integer
+epoch has no serialization ambiguity, which is the same reason `Quota` stores
+year and month as integers.
+
+**Rollback**
+
+```sql
+ALTER TABLE "RateLimit" DROP COLUMN "windowStart";
+ALTER TABLE "RateLimit" ADD COLUMN "windowStart" timestamp(3) NOT NULL;
+```
+
+Reverting reintroduces the comparison bug. Counters are in-flight state only.
+
+---
+
+## 0008_add_webhook_events
+
+**Forward** - creates `WebhookEvent`, one row per Stripe event id already
+handled.
+
+Purely additive. Stripe retries any non-2xx delivery, so the handler has always
+been able to run twice; it was benign only because the single write it made was
+idempotent. Refund and dispute handling changes that, so the id is claimed
+before any work and released if the work throws.
+
+**Rollback**
+
+```sql
+DROP TABLE "WebhookEvent";
+```
+
+Loses the record of which events were processed, so a Stripe retry after that
+point would be handled again.

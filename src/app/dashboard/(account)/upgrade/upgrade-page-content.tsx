@@ -60,12 +60,22 @@ export const UpgradePageContent = ({ plan }: { plan: Plan }) => {
             Thanks for supporting pingX.
           </p>
         ) : (
-          <Button
-            onClick={() => createCheckoutSession()}
-            disabled={isPending}
-          >
-            {isPending ? "Redirecting..." : "Upgrade to Pro"}
-          </Button>
+          <div className="space-y-2">
+            <Button
+              onClick={() => createCheckoutSession()}
+              disabled={isPending}
+            >
+              {isPending ? "Redirecting..." : "Upgrade to Pro"}
+            </Button>
+
+            <p className="text-xs text-muted-foreground">
+              Demo runs in Stripe test mode. Pay with card{" "}
+              <code className="rounded border border-border bg-recessed/60 px-1 py-0.5 font-mono">
+                4242 4242 4242 4242
+              </code>
+              , any future expiry and any CVC. No real money moves.
+            </p>
+          </div>
         )}
       </div>
 
