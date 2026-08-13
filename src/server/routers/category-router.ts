@@ -9,6 +9,7 @@ import { categoryLimitFor, slotsRemaining } from "@/lib/quota";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import { RATE_LIMIT } from "@/config";
 import { isUniqueViolation } from "@/lib/db-error";
+import { isSearchable, likePattern } from "@/lib/search";
 import { DiscordClient } from "@/lib/discord-client";
 import { deliver } from "@/lib/delivery";
 import { formatDiscordEmbed, type EventData } from "@/lib/format-discord-embed";
@@ -300,6 +301,53 @@ export const categoryRouter = router({
                 return c.json({ eventId: event.id })
             }),
 
+        getEventSeries: privateProcedure
+            .input(z.object({
+                name: EVENT_CATEGORY_VALIDATOR,
+                timeRange: z.enum(["today", "week", "month"]),
+            }))
+            .query(async ({c, ctx, input}) => {
+                const { name, timeRange } = input
+
+                const now = new Date()
+                const startDate =
+                    timeRange === "today"
+                        ? startOfDay(now)
+                        : timeRange === "week"
+                          ? startOfWeek(now, { weekStartsOn: 0 })
+                          : startOfMonth(now)
+
+                const categoryIds = db
+                    .select({ id: eventCategories.id })
+                    .from(eventCategories)
+                    .where(
+                        and(
+                            eq(eventCategories.name, name),
+                            eq(eventCategories.userId, ctx.user.id)
+                        )
+                    )
+
+                const bucket = timeRange === "today" ? "hour" : "day"
+
+                const rows = await db
+                    .select({
+                        bucket: sql<string>`date_trunc(${bucket}, ${events.createdAt})::text`,
+                        delivered: sql<number>`count(*) filter (where ${events.deliveryStatus} = 'DELIVERED')`.mapWith(Number),
+                        failed: sql<number>`count(*) filter (where ${events.deliveryStatus} = 'FAILED')`.mapWith(Number),
+                    })
+                    .from(events)
+                    .where(
+                        and(
+                            inArray(events.eventCategoryId, categoryIds),
+                            gte(events.createdAt, startDate)
+                        )
+                    )
+                    .groupBy(sql`1`)
+                    .orderBy(sql`1`)
+
+                return c.superjson({ series: rows, bucket })
+            }),
+
         resendEvent: privateProcedure
             .input(z.object({ eventId: z.string().min(1) }))
             .mutation(async ({c, ctx, input}) => {
@@ -368,11 +416,13 @@ export const categoryRouter = router({
                 name: EVENT_CATEGORY_VALIDATOR,
                 page: z.number().int().min(1),
                 limit: z.number().int().min(1).max(50),
-                timeRange: z.enum(["today", "week" , "month"])
+                timeRange: z.enum(["today", "week" , "month"]),
+                search: z.string().max(100).optional(),
+                status: z.enum(["PENDING", "DELIVERED", "FAILED"]).optional()
             })
         )
         .query(async ({c, ctx, input}) => {
-            const {name, page, limit, timeRange} = input;
+            const {name, page, limit, timeRange, search, status} = input;
 
             const now = new Date()
             let startDate: Date
@@ -401,7 +451,11 @@ export const categoryRouter = router({
 
             const inRange = and(
                 inArray(events.eventCategoryId, categoryIds),
-                gte(events.createdAt, startDate)
+                gte(events.createdAt, startDate),
+                status ? eq(events.deliveryStatus, status) : undefined,
+                search && isSearchable(search)
+                    ? sql`${events.data}::text ILIKE ${likePattern(search)}`
+                    : undefined
             )
 
             const rangeFieldKeys = db

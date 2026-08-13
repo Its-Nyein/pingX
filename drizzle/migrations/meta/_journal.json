@@ -64,6 +64,13 @@
       "when": 1786528764368,
       "tag": "0008_add_webhook_events",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1786635802887,
+      "tag": "0009_add_event_data_search_index",
+      "breakpoints": true
     }
   ]
 }
