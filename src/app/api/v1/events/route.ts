@@ -2,6 +2,8 @@ import { db, events, users } from "@/db";
 import { DiscordClient } from "@/lib/discord-client";
 import { formatDiscordEmbed } from "@/lib/format-discord-embed";
 import { deliver } from "@/lib/delivery";
+import { consumeRateLimit } from "@/lib/rate-limit";
+import { createLogger, newRequestId } from "@/lib/logger";
 import {
     crossedWarnThreshold,
     getOrRollQuota,
@@ -13,13 +15,27 @@ import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { unknown, z } from "zod";
 
+const MAX_BODY_BYTES = 16 * 1024;
+const MAX_DATA_FIELDS = 50;
+const MAX_VALUE_LENGTH = 1024;
+
 const REQUEST_VALIDATOR = z.object({
     category: EVENT_CATEGORY_VALIDATOR,
-    data: z.record(z.string(), z.string().or(z.number()).or(z.boolean())).optional(),
-    description: z.string().optional(),
+    data: z
+        .record(
+            z.string().max(64),
+            z.string().max(MAX_VALUE_LENGTH).or(z.number()).or(z.boolean())
+        )
+        .refine((data) => Object.keys(data).length <= MAX_DATA_FIELDS, {
+            message: `data may contain at most ${MAX_DATA_FIELDS} fields`,
+        })
+        .optional(),
+    description: z.string().max(MAX_VALUE_LENGTH).optional(),
 }).strict();
 
 export const POST = async(req: NextRequest) => {
+    const log = createLogger("events", { requestId: newRequestId() });
+
     try {
         const authHeader = req.headers.get('Authorization');
         if(!authHeader) {
@@ -33,6 +49,15 @@ export const POST = async(req: NextRequest) => {
         const apiKey = authHeader.split('Bearer ')[1];
         if(!apiKey || apiKey.trim() === '') {
             return NextResponse.json({ message: "Invalid API key" }, { status: 401 });
+        }
+
+        const rate = await consumeRateLimit(apiKey);
+
+        if (!rate.allowed) {
+            return NextResponse.json(
+                { message: `Rate limit of ${rate.limit} requests per minute exceeded` },
+                { status: 429, headers: { "Retry-After": String(rate.retryAfter) } }
+            );
         }
 
         const user = await db.query.users.findFirst({
@@ -74,10 +99,30 @@ export const POST = async(req: NextRequest) => {
         const discord = new DiscordClient(process.env.DISCORD_BOT_TOKEN);
         const dmChannel = await discord.createDM(user.discordId);
 
-        let requestData = unknown;
+        const declaredLength = Number(req.headers.get("content-length") ?? 0);
+
+        if (declaredLength > MAX_BODY_BYTES) {
+            return NextResponse.json(
+                { message: `Request body exceeds ${MAX_BODY_BYTES} bytes` },
+                { status: 413 }
+            );
+        }
+
+        let requestData: unknown;
 
         try {
-            requestData = await req.json();
+            // Content-Length can be absent or wrong, so the body is measured
+            // as it is read rather than trusted from the header.
+            const raw = await req.text();
+
+            if (raw.length > MAX_BODY_BYTES) {
+                return NextResponse.json(
+                    { message: `Request body exceeds ${MAX_BODY_BYTES} bytes` },
+                    { status: 413 }
+                );
+            }
+
+            requestData = JSON.parse(raw);
         } catch (error) {
             return NextResponse.json({ message: "Invalid request body" }, { status: 400 });
         }
@@ -113,7 +158,11 @@ export const POST = async(req: NextRequest) => {
                 .set({ deliveryStatus: 'FAILED', lastError: outcome.reason })
                 .where(eq(events.id, event.id))
 
-            console.error("[events] discord delivery failed", outcome.reason);
+            log.error("discord delivery failed", {
+                eventId: event.id,
+                permanent: outcome.permanent,
+                reason: outcome.reason,
+            });
 
             return NextResponse.json({
                 message: outcome.permanent
@@ -141,7 +190,10 @@ export const POST = async(req: NextRequest) => {
                 });
             }
         } catch (error) {
-            console.error("[events] metering failed after successful delivery", error);
+            log.error("metering failed after successful delivery", {
+                eventId: event.id,
+                error,
+            });
         }
 
         return NextResponse.json({ message: "Event processed successfully", eventId: event.id });

@@ -58,6 +58,15 @@ vi.mock("@/lib/quota", () => ({
 
 vi.mock("@/lib/quota-warning", () => ({ sendQuotaWarning: vi.fn() }))
 
+vi.mock("@/lib/rate-limit", () => ({
+  consumeRateLimit: vi.fn(async () => ({
+    allowed: true,
+    count: 1,
+    limit: 60,
+    retryAfter: 60,
+  })),
+}))
+
 const post = async () => {
   const { POST } = await import("@/app/api/v1/events/route")
 

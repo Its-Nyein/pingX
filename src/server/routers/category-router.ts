@@ -7,6 +7,9 @@ import { z } from "zod";
 import { EVENT_CATEGORY_VALIDATOR } from "@/lib/validators/validator";
 import { categoryLimitFor, slotsRemaining } from "@/lib/quota";
 import { isUniqueViolation } from "@/lib/db-error";
+import { DiscordClient } from "@/lib/discord-client";
+import { deliver } from "@/lib/delivery";
+import { formatDiscordEmbed, type EventData } from "@/lib/format-discord-embed";
 import { HTTPException } from "hono/http-exception";
 
 export const categoryRouter = router({
@@ -76,11 +79,11 @@ export const categoryRouter = router({
     }),
 
     deleteCategory: privateProcedure
-        .input(z.object({ name: z.string() }))
+        .input(z.object({ name: EVENT_CATEGORY_VALIDATOR }))
         .mutation(async ({c, input, ctx}) => {
             const { name } = input;
 
-            await db
+            const deleted = await db
                 .delete(eventCategories)
                 .where(
                     and(
@@ -88,6 +91,13 @@ export const categoryRouter = router({
                         eq(eventCategories.userId, ctx.user.id)
                     )
                 )
+                .returning({ id: eventCategories.id })
+
+            if (deleted.length === 0) {
+                throw new HTTPException(404, {
+                    message: `You do not have a category named "${name}".`
+                })
+            }
 
             return c.json({success: true})
         }),
@@ -198,6 +208,69 @@ export const categoryRouter = router({
                 return c.json({ hasEvents })
             }),
 
+        resendEvent: privateProcedure
+            .input(z.object({ eventId: z.string().min(1) }))
+            .mutation(async ({c, ctx, input}) => {
+                const { user } = ctx
+
+                if (!user.discordId) {
+                    throw new HTTPException(400, {
+                        message: "Add your Discord ID in settings before resending."
+                    })
+                }
+
+                const [event] = await db
+                    .select()
+                    .from(events)
+                    .where(and(eq(events.id, input.eventId), eq(events.userId, user.id)))
+                    .limit(1)
+
+                if (!event) {
+                    throw new HTTPException(404, { message: "Event not found" })
+                }
+
+                if (event.deliveryStatus === "DELIVERED") {
+                    throw new HTTPException(409, {
+                        message: "That event was already delivered."
+                    })
+                }
+
+                const discord = new DiscordClient(process.env.DISCORD_BOT_TOKEN)
+                const dmChannel = await discord.createDM(user.discordId)
+
+                const outcome = await deliver(
+                    discord,
+                    dmChannel.id,
+                    formatDiscordEmbed({
+                        categoryName: event.name,
+                        data: event.data as EventData,
+                        timestamp: event.createdAt,
+                    })
+                )
+
+                if (!outcome.delivered) {
+                    await db
+                        .update(events)
+                        .set({ deliveryStatus: "FAILED", lastError: outcome.reason })
+                        .where(eq(events.id, event.id))
+
+                    throw new HTTPException(outcome.permanent ? 422 : 502, {
+                        message: outcome.reason
+                    })
+                }
+
+                await db
+                    .update(events)
+                    .set({
+                        deliveryStatus: "DELIVERED",
+                        deliveredAt: outcome.at,
+                        lastError: null,
+                    })
+                    .where(eq(events.id, event.id))
+
+                return c.json({ success: true })
+            }),
+
         getEventsByCategoryName: privateProcedure
         .input(z.object({
                 name: EVENT_CATEGORY_VALIDATOR,
@@ -239,6 +312,14 @@ export const categoryRouter = router({
                 gte(events.createdAt, startDate)
             )
 
+            const rangeFieldKeys = db
+                .select({
+                    key: sql<string>`jsonb_object_keys(case when jsonb_typeof(${events.data}) = 'object' then ${events.data} else '{}'::jsonb end)`.as("key"),
+                })
+                .from(events)
+                .where(inRange)
+                .as("range_field_keys")
+
             const [eventList, eventsCount, uniqueFieldCount] = await Promise.all([
                 db
                     .select()
@@ -253,18 +334,9 @@ export const categoryRouter = router({
                     .where(inRange)
                     .then(([row]) => row.value),
                 db
-                    .selectDistinct({data: events.data})
-                    .from(events)
-                    .where(inRange)
-                    .then((rows) => {
-                        const fieldNames = new Set<string>();
-                        rows.forEach((event) => {
-                            Object.keys(event.data as object).forEach((name) => {
-                                fieldNames.add(name)
-                            })
-                        })
-                        return fieldNames.size
-                    })
+                    .select({ value: countDistinct(rangeFieldKeys.key) })
+                    .from(rangeFieldKeys)
+                    .then(([row]) => row?.value ?? 0)
             ])
             return c.superjson({
                 events: eventList,

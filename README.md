@@ -1,10 +1,21 @@
 # pingX
 
+**[Live demo](https://ping-x.netlify.app)**
+
 [![CI](https://github.com/itsnyein/pingX/actions/workflows/ci.yml/badge.svg)](https://github.com/itsnyein/pingX/actions/workflows/ci.yml)
 
 Next.js 16 App Router SaaS that turns API calls into Discord notifications.
 Better Auth for auth, Hono for the API layer, Drizzle ORM on Neon Postgres,
 Stripe for billing.
+
+Send an event, get a Discord DM:
+
+```bash
+curl -X POST https://ping-x.netlify.app/api/v1/events \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"category":"sale","data":{"plan":"PRO","amount":49}}'
+```
 
 ## Getting started
 
@@ -19,8 +30,9 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000).
 
 `STRIPE_SECRET_KEY` must be set for `npm run build` as well as for `npm run dev`
+
 - the Stripe client is constructed at module scope and throws on an empty key.
-A dummy `sk_test_placeholder` is enough if you are not touching billing.
+  A dummy `sk_test_placeholder` is enough if you are not touching billing.
 
 ### Database driver
 
@@ -78,7 +90,7 @@ session read already carries them and no join or second query is needed:
 
 ```ts
 const user = await requireUser()
-user.plan     // "FREE" | "PRO"
+user.plan // "FREE" | "PRO"
 user.apiKey
 ```
 
@@ -119,13 +131,13 @@ const [user] = await db.select().from(users).where(eq(users.id, id)).limit(1)
 
 ### Scripts
 
-| Script | What it does |
-| --- | --- |
-| `npm run db:generate` | Diff the schema and write a migration to `drizzle/migrations` |
-| `npm run db:migrate` | Apply pending migrations |
-| `npm run db:push` | Push the schema straight to the database, skipping migration files |
-| `npm run db:studio` | Open Drizzle Studio |
-| `npm run typecheck` | `tsc --noEmit` |
+| Script                | What it does                                                       |
+| --------------------- | ------------------------------------------------------------------ |
+| `npm run db:generate` | Diff the schema and write a migration to `drizzle/migrations`      |
+| `npm run db:migrate`  | Apply pending migrations                                           |
+| `npm run db:push`     | Push the schema straight to the database, skipping migration files |
+| `npm run db:studio`   | Open Drizzle Studio                                                |
+| `npm run typecheck`   | `tsc --noEmit`                                                     |
 
 Review generated SQL before applying it to a database that holds real data.
 `db:push` is for scratch databases; it does not ask before dropping things.
@@ -202,11 +214,11 @@ Content-Type: application/json
 
 **Body**
 
-| Field | Type | Required | Notes |
-| --- | --- | --- | --- |
-| `category` | string | yes | Must be an existing category of yours. Letters, digits and hyphens only. |
-| `description` | string | no | Shown as the embed description. Defaults to `A new <category> event has occurred`. |
-| `data` | object | no | Flat key/value pairs. Values must be string, number or boolean - **nested objects and arrays are rejected**. Each key becomes a field in the Discord embed. |
+| Field         | Type   | Required | Notes                                                                                                                                                       |
+| ------------- | ------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `category`    | string | yes      | Must be an existing category of yours. Letters, digits and hyphens only.                                                                                    |
+| `description` | string | no       | Shown as the embed description. Defaults to `A new <category> event has occurred`.                                                                          |
+| `data`        | object | no       | Flat key/value pairs. Values must be string, number or boolean - **nested objects and arrays are rejected**. Each key becomes a field in the Discord embed. |
 
 Unknown top-level fields are rejected - the schema is strict.
 
@@ -223,16 +235,16 @@ curl -X POST https://ping-x.netlify.app/api/v1/events \
 
 **Responses**
 
-| Code | Meaning | Body |
-| --- | --- | --- |
-| `200` | Stored and delivered | `{ "message": "Event processed successfully", "eventId": "..." }` |
-| `400` | Body was not valid JSON | `{ "message": "Invalid request body" }` |
-| `401` | Missing, malformed or unknown API key | `{ "message": "Unauthorized" }` / `{ "message": "Invalid API key" }` |
-| `403` | No Discord ID saved on the account | `{ "message": "Please enter your discord ID in your account settings" }` |
-| `404` | No category of that name | `{ "message": "You dont have a category named \"x\"" }` |
-| `422` | Body failed validation, or Discord refused permanently - for example the recipient does not accept DMs | `{ "message": "<reason>" }` |
-| `429` | Monthly quota reached | `{ "message": "Monthly quota reached. Please upgrade your plan for more events" }` |
-| `502` | Stored, but Discord delivery failed for a reason worth retrying - rate limit, 5xx, network | `{ "message": "Could not deliver the event to Discord...", "eventId": "..." }` |
+| Code  | Meaning                                                                                                | Body                                                                               |
+| ----- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| `200` | Stored and delivered                                                                                   | `{ "message": "Event processed successfully", "eventId": "..." }`                  |
+| `400` | Body was not valid JSON                                                                                | `{ "message": "Invalid request body" }`                                            |
+| `401` | Missing, malformed or unknown API key                                                                  | `{ "message": "Unauthorized" }` / `{ "message": "Invalid API key" }`               |
+| `403` | No Discord ID saved on the account                                                                     | `{ "message": "Please enter your discord ID in your account settings" }`           |
+| `404` | No category of that name                                                                               | `{ "message": "You dont have a category named \"x\"" }`                            |
+| `422` | Body failed validation, or Discord refused permanently - for example the recipient does not accept DMs | `{ "message": "<reason>" }`                                                        |
+| `429` | Monthly quota reached                                                                                  | `{ "message": "Monthly quota reached. Please upgrade your plan for more events" }` |
+| `502` | Stored, but Discord delivery failed for a reason worth retrying - rate limit, 5xx, network             | `{ "message": "Could not deliver the event to Discord...", "eventId": "..." }`     |
 
 A `502` or a delivery-related `422` still creates the event - it is stored with
 status `FAILED`, the reason is kept on the row, and it is visible on the
@@ -269,8 +281,23 @@ CI without secrets. `tests/integration/` exercises quota rollover against a real
 database and skips itself unless `TEST_DATABASE_URL` is set; point it at a
 throwaway Neon branch, never at data you care about.
 
+CI runs those integration tests against an ephemeral Neon branch when
+`NEON_API_KEY` and `NEON_PROJECT_ID` are configured, and posts a notice and
+skips when they are not. If you fork this repo without those secrets, the
+integration job is inert — it is not silently passing tests that never ran.
+
 CI (`.github/workflows/ci.yml`) runs typecheck → lint → test → build on Node 20
 and 22 for every pull request and every push to `main`.
+
+## Billing
+
+Stripe runs in **test mode** on the demo. Upgrading to Pro is a real checkout
+against a real webhook endpoint — pay with card `4242 4242 4242 4242`, any
+future expiry, any CVC. No money moves.
+
+The webhook claims each Stripe event id before doing any work, so a retried
+delivery is a no-op, and it handles `charge.refunded` and
+`charge.dispute.created` by returning the account to Free.
 
 ## Known limitations
 

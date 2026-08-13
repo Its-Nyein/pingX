@@ -36,6 +36,34 @@
       "when": 1786526196337,
       "tag": "0004_add_delivery_receipts",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1786528316858,
+      "tag": "0005_cascade_event_category_delete",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1786528509468,
+      "tag": "0006_add_rate_limits",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1786528615010,
+      "tag": "0007_rate_limit_window_as_epoch",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1786528764368,
+      "tag": "0008_add_webhook_events",
+      "breakpoints": true
     }
   ]
 }
