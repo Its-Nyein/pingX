@@ -5,9 +5,6 @@ import { StatusCode } from "hono/utils/http-status"
 import superjson from "superjson"
 import { Bindings } from "../env"
 
-/**
- * Type-level SuperJSON integration
- */
 declare module "hono" {
   interface Context {
     superjson: <T>(data: T, status?: number) => SuperJSONTypedResponse<T>
@@ -23,10 +20,6 @@ export type SuperJSONTypedResponse<
 export class Procedure<ctx = {}> {
   private readonly middlewares: Middleware<ctx>[] = []
 
-  /**
-   * Optional, but recommended:
-   * This makes "c.superjson" available to your API routes
-   */
   private superjsonMiddleware: Middleware<ctx> =
     async function superjsonMiddleware({ c, next }) {
       type JSONRespond = typeof c.json
@@ -45,7 +38,6 @@ export class Procedure<ctx = {}> {
   constructor(middlewares: Middleware<ctx>[] = []) {
     this.middlewares = middlewares
 
-    // add built-in superjson middleware if not already present
     if (!this.middlewares.some((mw) => mw.name === "superjsonMiddleware")) {
       this.middlewares.push(this.superjsonMiddleware)
     }
@@ -62,7 +54,10 @@ export class Procedure<ctx = {}> {
       c: Context<{ Bindings: Bindings }>
     }) => Promise<Return>
   ): Procedure<ctx & T & Return> {
-    return new Procedure<ctx & T & Return>([...this.middlewares, fn as any])
+    return new Procedure<ctx & T & Return>([
+      ...this.middlewares,
+      fn as unknown as Middleware<ctx & T & Return>,
+    ])
   }
 
   input = <Schema extends Record<string, unknown>>(
@@ -81,7 +76,7 @@ export class Procedure<ctx = {}> {
     ): QueryOperation<Schema, Output> => ({
       type: "query",
       schema,
-      handler: fn as any,
+      handler: fn as unknown as QueryOperation<any, any>["handler"],
       middlewares: this.middlewares,
     }),
 
@@ -98,7 +93,7 @@ export class Procedure<ctx = {}> {
     ): MutationOperation<Schema, Output> => ({
       type: "mutation",
       schema,
-      handler: fn as any,
+      handler: fn as unknown as MutationOperation<any, any>["handler"],
       middlewares: this.middlewares,
     }),
   })
@@ -118,7 +113,7 @@ export class Procedure<ctx = {}> {
   ): QueryOperation<{}, Output> {
     return {
       type: "query",
-      handler: fn as any,
+      handler: fn as unknown as QueryOperation<any, any>["handler"],
       middlewares: this.middlewares,
     }
   }
@@ -136,7 +131,7 @@ export class Procedure<ctx = {}> {
   ): MutationOperation<{}, Output> {
     return {
       type: "mutation",
-      handler: fn as any,
+      handler: fn as unknown as MutationOperation<any, any>["handler"],
       middlewares: this.middlewares,
     }
   }

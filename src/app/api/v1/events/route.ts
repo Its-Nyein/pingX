@@ -229,9 +229,6 @@ export const POST = async(req: NextRequest) => {
             );
         }
 
-        const discord = new DiscordClient(process.env.DISCORD_BOT_TOKEN);
-        const dmChannel = await discord.createDM(user.discordId);
-
         const declaredLength = Number(req.headers.get("content-length") ?? 0);
 
         if (declaredLength > MAX_BODY_BYTES) {
@@ -270,6 +267,20 @@ export const POST = async(req: NextRequest) => {
             description: validationResult.description,
             data: validationResult.data,
         })
+
+        const discord = new DiscordClient(process.env.DISCORD_BOT_TOKEN);
+
+        let dmChannel: { id: string };
+
+        try {
+            dmChannel = await discord.createDM(user.discordId);
+        } catch (error) {
+            log.error("could not open a Discord DM", { error });
+
+            return NextResponse.json({
+                message: "Could not open a Discord DM. Check that your Discord ID is correct and that you share a server with the pingX bot."
+            }, { status: 422 });
+        }
 
         const [event] = await db
             .insert(events)

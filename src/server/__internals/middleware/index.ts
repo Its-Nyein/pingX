@@ -1,14 +1,8 @@
-/**
- * Internal middlewares
- * Do not modify unless you know what you're doing
- */
 
 import { MiddlewareHandler } from "hono"
+import { HTTPException } from "hono/http-exception"
 import { parseSuperJSON } from "./utils"
 
-/**
- * Middleware to parse GET-request using SuperJSON
- */
 export const queryParsingMiddleware: MiddlewareHandler = async (c, next) => {
   const rawQuery = c.req.query()
   const parsedQuery: Record<string, unknown> = {}
@@ -21,11 +15,19 @@ export const queryParsingMiddleware: MiddlewareHandler = async (c, next) => {
   await next()
 }
 
-/**
- * Middleware to parse POST-requests using SuperJSON
- */
 export const bodyParsingMiddleware: MiddlewareHandler = async (c, next) => {
-  const rawBody = await c.req.json()
+  let rawBody: unknown
+
+  try {
+    rawBody = await c.req.json()
+  } catch {
+    throw new HTTPException(400, { message: "Invalid JSON body" })
+  }
+
+  if (typeof rawBody !== "object" || rawBody === null || Array.isArray(rawBody)) {
+    throw new HTTPException(400, { message: "Body must be a JSON object" })
+  }
+
   const parsedBody: Record<string, unknown> = {}
 
   for (const [key, value] of Object.entries(rawBody)) {

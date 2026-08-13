@@ -169,7 +169,7 @@ export const categoryRouter = router({
                 .slice(0, slotsRemaining(existing.length, limit))
 
             if (wanted.length === 0) {
-                return c.json({ succcess: true, count: 0 })
+                return c.json({ success: true, count: 0 })
             }
 
             const categories = await db
@@ -183,7 +183,7 @@ export const categoryRouter = router({
                 .onConflictDoNothing()
                 .returning({id: eventCategories.id})
 
-            return c.json({ succcess: true, count: categories.length})
+            return c.json({ success: true, count: categories.length})
         }),
 
         pollCategory: privateProcedure

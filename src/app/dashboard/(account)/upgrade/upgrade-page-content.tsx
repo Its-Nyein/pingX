@@ -7,10 +7,17 @@ import { FREE_QUOTA, PRO_QUOTA } from "@/config"
 import type { Plan } from "@/db"
 import { client } from "@/lib/client"
 import { useMutation, useQuery } from "@tanstack/react-query"
+import { toast } from "sonner"
 import { format } from "date-fns"
 import { useRouter } from "next/navigation"
 
-export const UpgradePageContent = ({ plan }: { plan: Plan }) => {
+export const UpgradePageContent = ({
+  plan,
+  billingEnabled,
+}: {
+  plan: Plan
+  billingEnabled: boolean
+}) => {
   const router = useRouter()
   const isPro = plan === "PRO"
 
@@ -21,6 +28,9 @@ export const UpgradePageContent = ({ plan }: { plan: Plan }) => {
     },
     onSuccess: ({ url }) => {
       if (url) router.push(url)
+    },
+    onError: (error) => {
+      toast.error("Couldn't start checkout", { description: error.message })
     },
   })
 
@@ -63,10 +73,21 @@ export const UpgradePageContent = ({ plan }: { plan: Plan }) => {
           <div className="space-y-2">
             <Button
               onClick={() => createCheckoutSession()}
-              disabled={isPending}
+              disabled={isPending || !billingEnabled}
+              title={
+                billingEnabled
+                  ? undefined
+                  : "Billing is not configured on this deployment."
+              }
             >
               {isPending ? "Redirecting..." : "Upgrade to Pro"}
             </Button>
+
+            <p className="text-xs text-muted-foreground">
+              {!billingEnabled
+                ? "Billing is not configured on this deployment, so upgrading is disabled."
+                : null}
+            </p>
 
             <p className="text-xs text-muted-foreground">
               Demo runs in Stripe test mode. Pay with card{" "}

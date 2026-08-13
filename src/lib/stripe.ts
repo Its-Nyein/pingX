@@ -1,5 +1,7 @@
 import Stripe from "stripe"
 
+export const isBillingConfigured = Boolean(process.env.STRIPE_SECRET_KEY)
+
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "", {
   apiVersion: "2026-07-29.dahlia",
   typescript: true,
@@ -38,9 +40,6 @@ export const createCheckoutSession = async ({
     metadata: {
       userId,
     },
-    // Session metadata does not reach the charge. A PaymentIntent copies its
-    // metadata to the charge it creates, so the refund and dispute webhooks
-    // need it set here to know whose plan to downgrade.
     payment_intent_data: {
       metadata: {
         userId,
