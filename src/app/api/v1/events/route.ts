@@ -2,6 +2,7 @@ import { db, events, users } from "@/db";
 import { DiscordClient } from "@/lib/discord-client";
 import { formatDiscordEmbed } from "@/lib/format-discord-embed";
 import { deliver, openDirectMessage } from "@/lib/delivery";
+import { evaluateAlerts } from "@/lib/alerts";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import { decodeCursor, encodeCursor } from "@/lib/cursor";
 import { isSearchable, likePattern } from "@/lib/search";
@@ -332,6 +333,23 @@ export const POST = async(req: NextRequest) => {
             }
         } catch (error) {
             log.error("metering failed after successful delivery", {
+                eventId: event.id,
+                error,
+            });
+
+            return NextResponse.json({ message: "Event processed successfully", eventId: event.id });
+        }
+
+        try {
+            await evaluateAlerts({
+                userId: user.id,
+                discordId: user.discordId,
+                categoryId: category.id,
+                categoryName: category.name,
+                transport: discord,
+            });
+        } catch (error) {
+            log.error("alert evaluation failed after successful delivery", {
                 eventId: event.id,
                 error,
             });

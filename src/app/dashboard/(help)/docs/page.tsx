@@ -165,6 +165,20 @@ const Page = async () => {
             </p>
           </Section>
 
+          <Section title="Being told when something is wrong">
+            <p>
+              An <Link href="/dashboard/alerts" className="text-link">alert rule</Link>{" "}
+              sends you a direct message when a threshold is met - say five
+              failed events in an hour. pingX checks after each event it
+              receives, so an alert arrives while the incident is happening
+              rather than on a schedule.
+            </p>
+            <p>
+              A rule will not fire again until its window has passed, so one
+              incident is one message rather than one per event.
+            </p>
+          </Section>
+
           <Section title="Keeping your key safe">
             <p>
               A key only sends events. It cannot change your account, delete

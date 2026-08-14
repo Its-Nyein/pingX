@@ -71,6 +71,13 @@
       "when": 1786635802887,
       "tag": "0009_add_event_data_search_index",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1786677535751,
+      "tag": "0010_add_alert_rules",
+      "breakpoints": true
     }
   ]
 }
