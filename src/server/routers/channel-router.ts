@@ -9,6 +9,19 @@ import { privateProcedure } from "../procedures"
 
 const MAX_CHANNELS = 5
 
+const CHANNEL_INPUT = z.object({
+  name: z.string().trim().min(1, "Give the channel a name").max(50),
+  target: z
+    .string()
+    .trim()
+    .min(1, "Paste the webhook URL")
+    .max(500)
+    .refine(isDiscordWebhookUrl, {
+      message:
+        "That is not a Discord webhook URL. Copy it from Server Settings, Integrations, Webhooks.",
+    }),
+})
+
 export const channelRouter = router({
   listChannels: privateProcedure.query(async ({ c, ctx }) => {
     const rows = await db
@@ -29,20 +42,8 @@ export const channelRouter = router({
   }),
 
   createChannel: privateProcedure
-    .input(
-      z.object({
-        name: z.string().min(1).max(50),
-        target: z.string().min(1).max(500),
-      })
-    )
+    .input(CHANNEL_INPUT)
     .mutation(async ({ c, ctx, input }) => {
-      if (!isDiscordWebhookUrl(input.target)) {
-        throw new HTTPException(422, {
-          message:
-            "That is not a Discord webhook URL. Copy it from Server Settings, Integrations, Webhooks.",
-        })
-      }
-
       const existing = await db
         .select({ id: channels.id })
         .from(channels)
@@ -60,7 +61,7 @@ export const channelRouter = router({
           userId: ctx.user.id,
           type: "DISCORD_WEBHOOK",
           name: input.name,
-          target: input.target.trim(),
+          target: input.target,
         })
         .returning({ id: channels.id })
 
