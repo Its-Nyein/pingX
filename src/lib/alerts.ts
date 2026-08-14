@@ -119,3 +119,14 @@ export const categoryNameFor = async (
 
   return row?.name ?? null
 }
+
+export const evaluateAlertsSafely = async (
+  input: EvaluateInput,
+  onError?: (error: unknown) => void
+): Promise<void> => {
+  try {
+    await evaluateAlerts(input)
+  } catch (error) {
+    onError?.(error)
+  }
+}

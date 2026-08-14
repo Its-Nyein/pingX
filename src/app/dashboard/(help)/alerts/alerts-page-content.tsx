@@ -4,6 +4,13 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { EmptyState } from "@/components/shell/empty-state"
 import { client } from "@/lib/client"
@@ -14,6 +21,8 @@ import { useState } from "react"
 import { toast } from "sonner"
 
 type Metric = "FAILED_EVENTS" | "ALL_EVENTS"
+
+const ALL_CATEGORIES = "__all__"
 
 const WINDOWS = [
   { label: "15 minutes", value: 15 },
@@ -113,15 +122,18 @@ export const AlertsPageContent = ({
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <Label htmlFor="metric">When</Label>
-            <select
-              id="metric"
+            <Select
               value={metric}
-              onChange={(e) => setMetric(e.target.value as Metric)}
-              className="mt-1 h-9 w-full rounded-md border border-border bg-card px-3 text-sm text-foreground"
+              onValueChange={(value) => setMetric(value as Metric)}
             >
-              <option value="FAILED_EVENTS">Failed events</option>
-              <option value="ALL_EVENTS">All events</option>
-            </select>
+              <SelectTrigger id="metric" className="mt-1 cursor-pointer">
+                <SelectValue placeholder="Select metric" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="FAILED_EVENTS">Failed events</SelectItem>
+                <SelectItem value="ALL_EVENTS">All events</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
@@ -139,35 +151,43 @@ export const AlertsPageContent = ({
 
           <div>
             <Label htmlFor="window">Within</Label>
-            <select
-              id="window"
-              value={windowMinutes}
-              onChange={(e) => setWindowMinutes(Number(e.target.value))}
-              className="mt-1 h-9 w-full rounded-md border border-border bg-card px-3 text-sm text-foreground"
+            <Select
+              value={String(windowMinutes)}
+              onValueChange={(value) => setWindowMinutes(Number(value))}
             >
-              {WINDOWS.map((w) => (
-                <option key={w.value} value={w.value}>
-                  {w.label}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger id="window" className="mt-1 cursor-pointer">
+                <SelectValue placeholder="Select window" />
+              </SelectTrigger>
+              <SelectContent>
+                {WINDOWS.map((w) => (
+                  <SelectItem key={w.value} value={String(w.value)}>
+                    {w.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
             <Label htmlFor="category">In</Label>
-            <select
-              id="category"
-              value={categoryName}
-              onChange={(e) => setCategoryName(e.target.value)}
-              className="mt-1 h-9 w-full rounded-md border border-border bg-card px-3 text-sm text-foreground"
+            <Select
+              value={categoryName || ALL_CATEGORIES}
+              onValueChange={(value) =>
+                setCategoryName(value === ALL_CATEGORIES ? "" : value)
+              }
             >
-              <option value="">All categories</option>
-              {categories.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger id="category" className="mt-1 cursor-pointer">
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL_CATEGORIES}>All categories</SelectItem>
+                {categories.map((name) => (
+                  <SelectItem key={name} value={name}>
+                    {name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

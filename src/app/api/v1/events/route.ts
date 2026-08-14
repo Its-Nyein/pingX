@@ -2,7 +2,7 @@ import { db, events, users } from "@/db";
 import { DiscordClient } from "@/lib/discord-client";
 import { formatDiscordEmbed } from "@/lib/format-discord-embed";
 import { deliver, openDirectMessage } from "@/lib/delivery";
-import { evaluateAlerts } from "@/lib/alerts";
+import { evaluateAlertsSafely } from "@/lib/alerts";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import { decodeCursor, encodeCursor } from "@/lib/cursor";
 import { isSearchable, likePattern } from "@/lib/search";
@@ -271,17 +271,6 @@ export const POST = async(req: NextRequest) => {
 
         const discord = new DiscordClient(process.env.DISCORD_BOT_TOKEN);
 
-        const channel = await openDirectMessage(discord, user.discordId);
-
-        if (!channel.opened) {
-            log.error("could not open a Discord DM", { reason: channel.reason });
-
-            return NextResponse.json(
-                { message: channel.reason },
-                { status: channel.permanent ? 422 : 502 }
-            );
-        }
-
         const [event] = await db
             .insert(events)
             .values({
@@ -291,6 +280,33 @@ export const POST = async(req: NextRequest) => {
                 eventCategoryId: category.id
             })
             .returning()
+
+        const channel = await openDirectMessage(discord, user.discordId);
+
+        if (!channel.opened) {
+            await db
+                .update(events)
+                .set({ deliveryStatus: 'FAILED', lastError: channel.reason })
+                .where(eq(events.id, event.id))
+
+            log.error("could not open a Discord DM", { eventId: event.id, reason: channel.reason });
+
+            await evaluateAlertsSafely(
+                {
+                    userId: user.id,
+                    discordId: user.discordId,
+                    categoryId: category.id,
+                    categoryName: category.name,
+                    transport: discord,
+                },
+                (error) => log.error("alert evaluation failed", { error })
+            );
+
+            return NextResponse.json(
+                { message: channel.reason, eventId: event.id },
+                { status: channel.permanent ? 422 : 502 }
+            );
+        }
 
         const outcome = await deliver(discord, channel.channelId, eventData);
 
@@ -305,6 +321,17 @@ export const POST = async(req: NextRequest) => {
                 permanent: outcome.permanent,
                 reason: outcome.reason,
             });
+
+            await evaluateAlertsSafely(
+                {
+                    userId: user.id,
+                    discordId: user.discordId,
+                    categoryId: category.id,
+                    categoryName: category.name,
+                    transport: discord,
+                },
+                (error) => log.error("alert evaluation failed", { error })
+            );
 
             return NextResponse.json({
                 message: outcome.permanent
@@ -340,20 +367,16 @@ export const POST = async(req: NextRequest) => {
             return NextResponse.json({ message: "Event processed successfully", eventId: event.id });
         }
 
-        try {
-            await evaluateAlerts({
+        await evaluateAlertsSafely(
+            {
                 userId: user.id,
                 discordId: user.discordId,
                 categoryId: category.id,
                 categoryName: category.name,
                 transport: discord,
-            });
-        } catch (error) {
-            log.error("alert evaluation failed after successful delivery", {
-                eventId: event.id,
-                error,
-            });
-        }
+            },
+            (error) => log.error("alert evaluation failed", { eventId: event.id, error })
+        );
 
         return NextResponse.json({ message: "Event processed successfully", eventId: event.id });
     } catch (error) {
