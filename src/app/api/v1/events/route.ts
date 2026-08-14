@@ -1,7 +1,7 @@
 import { db, events, users } from "@/db";
 import { DiscordClient } from "@/lib/discord-client";
 import { formatDiscordEmbed } from "@/lib/format-discord-embed";
-import { deliver } from "@/lib/delivery";
+import { deliver, openDirectMessage } from "@/lib/delivery";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import { decodeCursor, encodeCursor } from "@/lib/cursor";
 import { isSearchable, likePattern } from "@/lib/search";
@@ -270,16 +270,15 @@ export const POST = async(req: NextRequest) => {
 
         const discord = new DiscordClient(process.env.DISCORD_BOT_TOKEN);
 
-        let dmChannel: { id: string };
+        const channel = await openDirectMessage(discord, user.discordId);
 
-        try {
-            dmChannel = await discord.createDM(user.discordId);
-        } catch (error) {
-            log.error("could not open a Discord DM", { error });
+        if (!channel.opened) {
+            log.error("could not open a Discord DM", { reason: channel.reason });
 
-            return NextResponse.json({
-                message: "Could not open a Discord DM. Check that your Discord ID is correct and that you share a server with the pingX bot."
-            }, { status: 422 });
+            return NextResponse.json(
+                { message: channel.reason },
+                { status: channel.permanent ? 422 : 502 }
+            );
         }
 
         const [event] = await db
@@ -292,7 +291,7 @@ export const POST = async(req: NextRequest) => {
             })
             .returning()
 
-        const outcome = await deliver(discord, dmChannel.id, eventData);
+        const outcome = await deliver(discord, channel.channelId, eventData);
 
         if (!outcome.delivered) {
             await db
@@ -325,7 +324,7 @@ export const POST = async(req: NextRequest) => {
             if (crossedWarnThreshold(used, quota.limit, warned80)) {
                 await sendQuotaWarning({
                     discord,
-                    channelId: dmChannel.id,
+                    channelId: channel.channelId,
                     userId: user.id,
                     used,
                     limit: quota.limit,

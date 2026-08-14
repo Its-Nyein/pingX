@@ -4,6 +4,14 @@ export interface DeliveryTransport {
   sendEmbed(channelId: string, embed: APIEmbed): Promise<unknown>
 }
 
+export interface DirectMessageTransport {
+  createDM(userId: string): Promise<{ id: string }>
+}
+
+export type ChannelOutcome =
+  | { opened: true; channelId: string }
+  | { opened: false; permanent: boolean; reason: string }
+
 export type DeliveryOutcome =
   | { delivered: true; at: Date }
   | { delivered: false; permanent: boolean; reason: string }
@@ -12,6 +20,7 @@ const DISCORD_CODES: Record<number, string> = {
   50007: "The recipient does not accept direct messages from this server.",
   50001: "The bot does not have access to that channel.",
   10013: "That Discord user no longer exists.",
+  50033: "Discord does not recognise that user ID. Check it in settings.",
 }
 
 const statusOf = (error: unknown): number | undefined => {
@@ -28,16 +37,6 @@ const codeOf = (error: unknown): number | undefined => {
   return typeof code === "number" ? code : undefined
 }
 
-/**
- * 4xx other than 429 means Discord will answer the same way next time, so a
- * resend is pointless until something changes on the user's side. Everything
- * else - 429, 5xx, timeouts, connection resets - is worth trying again.
- *
- * @discordjs/rest already retries 5xx and network failures in process and
- * waits out 429s, so reaching here with one of those means its own attempts
- * are exhausted. This classification decides whether a resend is offered, not
- * whether to retry inline.
- */
 export const isPermanent = (error: unknown): boolean => {
   const status = statusOf(error)
   if (status === undefined) return false
@@ -72,6 +71,22 @@ export const deliver = async (
   } catch (error) {
     return {
       delivered: false,
+      permanent: isPermanent(error),
+      reason: describeFailure(error),
+    }
+  }
+}
+
+export const openDirectMessage = async (
+  transport: DirectMessageTransport,
+  discordId: string
+): Promise<ChannelOutcome> => {
+  try {
+    const channel = await transport.createDM(discordId)
+    return { opened: true, channelId: channel.id }
+  } catch (error) {
+    return {
+      opened: false,
       permanent: isPermanent(error),
       reason: describeFailure(error),
     }

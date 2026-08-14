@@ -1,4 +1,9 @@
-import { deliver, describeFailure, isPermanent } from "@/lib/delivery"
+import {
+  deliver,
+  describeFailure,
+  isPermanent,
+  openDirectMessage,
+} from "@/lib/delivery"
 import { describe, expect, it, vi } from "vitest"
 
 const discordError = (status: number, code?: number) =>
@@ -65,8 +70,6 @@ describe("deliver", () => {
     expect(transport.sendEmbed).toHaveBeenCalledWith("dm_1", EMBED)
   })
 
-  // The route stores this on the event, so a FAILED row explains itself
-  // instead of leaving the user to guess.
   it("returns a reason and permanence rather than throwing", async () => {
     const transport = {
       sendEmbed: vi.fn().mockRejectedValue(discordError(403, 50007)),
@@ -85,5 +88,39 @@ describe("deliver", () => {
     const outcome = await deliver(transport, "dm_1", EMBED)
 
     expect(outcome).toMatchObject({ delivered: false, permanent: false })
+  })
+})
+
+describe("openDirectMessage", () => {
+  it("returns the channel when Discord opens one", async () => {
+    const transport = { createDM: vi.fn().mockResolvedValue({ id: "dm_1" }) }
+
+    await expect(openDirectMessage(transport, "123")).resolves.toEqual({
+      opened: true,
+      channelId: "dm_1",
+    })
+  })
+
+  it("reports an invalid recipient rather than throwing", async () => {
+    const transport = {
+      createDM: vi.fn().mockRejectedValue(discordError(400, 50033)),
+    }
+
+    await expect(openDirectMessage(transport, "123")).resolves.toEqual({
+      opened: false,
+      permanent: true,
+      reason: "Discord does not recognise that user ID. Check it in settings.",
+    })
+  })
+
+  it("treats an unreachable Discord as worth retrying", async () => {
+    const transport = {
+      createDM: vi.fn().mockRejectedValue(discordError(503)),
+    }
+
+    await expect(openDirectMessage(transport, "123")).resolves.toMatchObject({
+      opened: false,
+      permanent: false,
+    })
   })
 })
