@@ -1,6 +1,7 @@
 import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { handle } from "hono/vercel"
+import { alertRouter } from "./routers/alert-router"
 import { categoryRouter } from "./routers/category-router"
 import { paymentRouter } from "./routers/payment-router"
 import { projectRouter } from "./routers/project-router"
@@ -15,7 +16,8 @@ const app = new Hono().basePath("/api").use(
 )
 
 const appRouter = app
-  .route("/category", categoryRouter)
+  .route("/alert", alertRouter)
+    .route("/category", categoryRouter)
   .route("/payment", paymentRouter)
   .route("/project", projectRouter)
 

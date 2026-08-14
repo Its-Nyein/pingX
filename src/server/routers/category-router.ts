@@ -13,6 +13,7 @@ import { isSearchable, likePattern } from "@/lib/search";
 import { retentionCutoff } from "@/lib/retention";
 import { DiscordClient } from "@/lib/discord-client";
 import { deliver, openDirectMessage } from "@/lib/delivery";
+import { evaluateAlertsSafely } from "@/lib/alerts";
 import { formatDiscordEmbed, type EventData } from "@/lib/format-discord-embed";
 import { HTTPException } from "hono/http-exception";
 
@@ -285,6 +286,13 @@ export const categoryRouter = router({
                         .set({ deliveryStatus: "FAILED", lastError: channel.reason })
                         .where(eq(events.id, event.id))
 
+                await evaluateAlertsSafely({
+                    userId: user.id,
+                    discordId: user.discordId,
+                    categoryId: category.id,
+                    categoryName: category.name,
+                    transport: discord,
+                })
                     throw new HTTPException(channel.permanent ? 422 : 502, {
                         message: channel.reason
                     })
@@ -306,6 +314,13 @@ export const categoryRouter = router({
                         .set({ deliveryStatus: "FAILED", lastError: outcome.reason })
                         .where(eq(events.id, event.id))
 
+                await evaluateAlertsSafely({
+                    userId: user.id,
+                    discordId: user.discordId,
+                    categoryId: category.id,
+                    categoryName: category.name,
+                    transport: discord,
+                })
                     throw new HTTPException(outcome.permanent ? 422 : 502, {
                         message: outcome.reason
                     })
@@ -407,6 +422,13 @@ export const categoryRouter = router({
                         .set({ deliveryStatus: "FAILED", lastError: channel.reason })
                         .where(eq(events.id, event.id))
 
+                await evaluateAlertsSafely({
+                    userId: user.id,
+                    discordId: user.discordId,
+                    categoryId: event.eventCategoryId!,
+                    categoryName: event.name,
+                    transport: discord,
+                })
                     throw new HTTPException(channel.permanent ? 422 : 502, {
                         message: channel.reason
                     })
@@ -428,6 +450,13 @@ export const categoryRouter = router({
                         .set({ deliveryStatus: "FAILED", lastError: outcome.reason })
                         .where(eq(events.id, event.id))
 
+                await evaluateAlertsSafely({
+                    userId: user.id,
+                    discordId: user.discordId,
+                    categoryId: event.eventCategoryId!,
+                    categoryName: event.name,
+                    transport: discord,
+                })
                     throw new HTTPException(outcome.permanent ? 422 : 502, {
                         message: outcome.reason
                     })

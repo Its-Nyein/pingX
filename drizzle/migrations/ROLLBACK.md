@@ -250,3 +250,27 @@ DROP INDEX "Event_data_trgm_idx";
 Leave the extension: dropping it would break any other index that comes to rely
 on it, and it costs nothing idle. Search keeps working without the index, just
 with a sequential scan.
+
+---
+
+## 0010_add_alert_rules
+
+**Forward** - creates the `AlertMetric` enum, `AlertRule` and `AlertHistory`.
+
+Purely additive: three new objects nothing else references. A rule scoped to one
+category cascades with that category, and every rule cascades with its owner, so
+deleting either leaves no orphans - the mistake `0005` existed to fix.
+
+`lastTriggeredAt` lives on the rule rather than being derived from history,
+because the cooldown check runs on the ingestion path and must not pay for an
+aggregate over history on every event.
+
+**Rollback**
+
+```sql
+DROP TABLE "AlertHistory";
+DROP TABLE "AlertRule";
+DROP TYPE "AlertMetric";
+```
+
+Loses configured rules and their trigger history. Events are untouched.
