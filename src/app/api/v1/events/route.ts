@@ -1,7 +1,7 @@
 import { db, events, users } from "@/db";
 import { DiscordClient } from "@/lib/discord-client";
 import { formatDiscordEmbed } from "@/lib/format-discord-embed";
-import { deliver } from "@/lib/delivery";
+import { deliver, openDirectMessage } from "@/lib/delivery";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import { decodeCursor, encodeCursor } from "@/lib/cursor";
 import { isSearchable, likePattern } from "@/lib/search";
@@ -229,9 +229,6 @@ export const POST = async(req: NextRequest) => {
             );
         }
 
-        const discord = new DiscordClient(process.env.DISCORD_BOT_TOKEN);
-        const dmChannel = await discord.createDM(user.discordId);
-
         const declaredLength = Number(req.headers.get("content-length") ?? 0);
 
         if (declaredLength > MAX_BODY_BYTES) {
@@ -271,6 +268,19 @@ export const POST = async(req: NextRequest) => {
             data: validationResult.data,
         })
 
+        const discord = new DiscordClient(process.env.DISCORD_BOT_TOKEN);
+
+        const channel = await openDirectMessage(discord, user.discordId);
+
+        if (!channel.opened) {
+            log.error("could not open a Discord DM", { reason: channel.reason });
+
+            return NextResponse.json(
+                { message: channel.reason },
+                { status: channel.permanent ? 422 : 502 }
+            );
+        }
+
         const [event] = await db
             .insert(events)
             .values({
@@ -281,7 +291,7 @@ export const POST = async(req: NextRequest) => {
             })
             .returning()
 
-        const outcome = await deliver(discord, dmChannel.id, eventData);
+        const outcome = await deliver(discord, channel.channelId, eventData);
 
         if (!outcome.delivered) {
             await db
@@ -314,7 +324,7 @@ export const POST = async(req: NextRequest) => {
             if (crossedWarnThreshold(used, quota.limit, warned80)) {
                 await sendQuotaWarning({
                     discord,
-                    channelId: dmChannel.id,
+                    channelId: channel.channelId,
                     userId: user.id,
                     used,
                     limit: quota.limit,

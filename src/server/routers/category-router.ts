@@ -12,7 +12,7 @@ import { isUniqueViolation } from "@/lib/db-error";
 import { isSearchable, likePattern } from "@/lib/search";
 import { retentionCutoff } from "@/lib/retention";
 import { DiscordClient } from "@/lib/discord-client";
-import { deliver } from "@/lib/delivery";
+import { deliver, openDirectMessage } from "@/lib/delivery";
 import { formatDiscordEmbed, type EventData } from "@/lib/format-discord-embed";
 import { HTTPException } from "hono/http-exception";
 
@@ -169,7 +169,7 @@ export const categoryRouter = router({
                 .slice(0, slotsRemaining(existing.length, limit))
 
             if (wanted.length === 0) {
-                return c.json({ succcess: true, count: 0 })
+                return c.json({ success: true, count: 0 })
             }
 
             const categories = await db
@@ -183,7 +183,7 @@ export const categoryRouter = router({
                 .onConflictDoNothing()
                 .returning({id: eventCategories.id})
 
-            return c.json({ succcess: true, count: categories.length})
+            return c.json({ success: true, count: categories.length})
         }),
 
         pollCategory: privateProcedure
@@ -277,11 +277,22 @@ export const categoryRouter = router({
                     .returning()
 
                 const discord = new DiscordClient(process.env.DISCORD_BOT_TOKEN)
-                const dmChannel = await discord.createDM(user.discordId)
+                const channel = await openDirectMessage(discord, user.discordId)
+
+                if (!channel.opened) {
+                    await db
+                        .update(events)
+                        .set({ deliveryStatus: "FAILED", lastError: channel.reason })
+                        .where(eq(events.id, event.id))
+
+                    throw new HTTPException(channel.permanent ? 422 : 502, {
+                        message: channel.reason
+                    })
+                }
 
                 const outcome = await deliver(
                     discord,
-                    dmChannel.id,
+                    channel.channelId,
                     formatDiscordEmbed({
                         categoryName: category.name,
                         description: "Test event sent from your pingX dashboard.",
@@ -388,11 +399,22 @@ export const categoryRouter = router({
                 }
 
                 const discord = new DiscordClient(process.env.DISCORD_BOT_TOKEN)
-                const dmChannel = await discord.createDM(user.discordId)
+                const channel = await openDirectMessage(discord, user.discordId)
+
+                if (!channel.opened) {
+                    await db
+                        .update(events)
+                        .set({ deliveryStatus: "FAILED", lastError: channel.reason })
+                        .where(eq(events.id, event.id))
+
+                    throw new HTTPException(channel.permanent ? 422 : 502, {
+                        message: channel.reason
+                    })
+                }
 
                 const outcome = await deliver(
                     discord,
-                    dmChannel.id,
+                    channel.channelId,
                     formatDiscordEmbed({
                         categoryName: event.name,
                         data: event.data as EventData,

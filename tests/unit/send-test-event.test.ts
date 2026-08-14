@@ -200,4 +200,29 @@ describe("sendTestEvent", () => {
     })
     expect(state.updates[0].deliveredAt).toBeInstanceOf(Date)
   })
+
+  it("does not 500 when Discord refuses the recipient", async () => {
+    state.createDM.mockRejectedValue(
+      Object.assign(new Error("Invalid Recipient(s)"), { status: 400, code: 50033 })
+    )
+
+    const res = await send()
+    const body = await res.json()
+
+    expect(res.status).toBe(422)
+    expect(body.message).toMatch(/does not recognise that user ID/)
+    expect(state.sendEmbed).not.toHaveBeenCalled()
+  })
+
+  it("records why the DM could not be opened on the event row", async () => {
+    state.createDM.mockRejectedValue(
+      Object.assign(new Error("Invalid Recipient(s)"), { status: 400, code: 50033 })
+    )
+
+    await send()
+
+    expect(state.updates).toHaveLength(1)
+    expect(state.updates[0]).toMatchObject({ deliveryStatus: "FAILED" })
+    expect(String(state.updates[0].lastError)).toMatch(/does not recognise/)
+  })
 })

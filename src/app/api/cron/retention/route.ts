@@ -5,6 +5,8 @@ import { cleanupCutoff } from "@/lib/retention"
 import { and, eq, lt } from "drizzle-orm"
 import { NextRequest, NextResponse } from "next/server"
 
+const STRANDED_AFTER_MS = 15 * 60 * 1000
+
 export const POST = async (req: NextRequest) => {
   const log = createLogger("retention", { requestId: newRequestId() })
   const secret = process.env.CRON_SECRET
@@ -47,8 +49,30 @@ export const POST = async (req: NextRequest) => {
     log.info("swept plan", { plan, cutoff: cutoff.toISOString(), deleted })
   }
 
+  const strandedBefore = new Date(Date.now() - STRANDED_AFTER_MS)
+
+  const stranded = await db
+    .update(events)
+    .set({
+      deliveryStatus: "FAILED",
+      lastError:
+        "Delivery was interrupted before it completed, so its outcome is unknown. Resend to try again.",
+    })
+    .where(
+      and(
+        eq(events.deliveryStatus, "PENDING"),
+        lt(events.createdAt, strandedBefore)
+      )
+    )
+    .returning({ id: events.id })
+
+  if (stranded.length) {
+    log.warn("reconciled stranded events", { count: stranded.length })
+  }
+
   return NextResponse.json({
     deleted: deletedByPlan,
+    stranded: stranded.length,
     graceDays: RETENTION.graceDays,
   })
 }

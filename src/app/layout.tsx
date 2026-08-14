@@ -1,19 +1,23 @@
 import type { Metadata } from "next"
-import { Bebas_Neue, Inter, Roboto } from "next/font/google"
+import localFont from "next/font/local"
 import "./globals.css"
 import { cn } from "@/lib/utils"
 import { Providers } from "@/components/providers"
 
-const roboto = Roboto({
-  weight: ["300","400","700"],
-  subsets: ["latin"],
-  variable: "--font-roboto"
+const roboto = localFont({
+  src: "./fonts/roboto-variable.woff2",
+  weight: "300 700",
+  style: "normal",
+  display: "swap",
+  variable: "--font-roboto",
 })
 
-const bebas = Bebas_Neue({
-  weight: ["400"],
-  subsets: ["latin"],
-  variable: "--font-bebas"
+const bebas = localFont({
+  src: "./fonts/bebas-neue-400.woff2",
+  weight: "400",
+  style: "normal",
+  display: "swap",
+  variable: "--font-bebas",
 })
 
 export const metadata: Metadata = {

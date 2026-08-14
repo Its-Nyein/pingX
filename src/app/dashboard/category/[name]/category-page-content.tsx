@@ -1,7 +1,7 @@
 "use client"
 
 import type { Event, EventCategory, Status } from "@/db"
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { EmptyCategoryState } from "./empty-category-state"
 import { useEffect, useMemo, useState } from "react"
@@ -138,6 +138,7 @@ export const CategoryPageContent = ({
       return await res.json()
     },
     refetchOnWindowFocus: false,
+    placeholderData: keepPreviousData,
     enabled: pollingData.hasEvents,
   })
 
