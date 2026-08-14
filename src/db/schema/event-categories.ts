@@ -1,12 +1,9 @@
 import { createId } from "@paralleldrive/cuid2"
 import { pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core"
 
+import { channels } from "./channels"
 import { users } from "./users"
 
-/**
- * A named bucket that events are grouped under, scoped to a user.
- * Category names are unique per user, not globally.
- */
 export const eventCategories = pgTable(
   "EventCategory",
   {
@@ -17,6 +14,9 @@ export const eventCategories = pgTable(
     userId: text("userId")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
+    channelId: text("channelId").references(() => channels.id, {
+      onDelete: "set null",
+    }),
     createdAt: timestamp("createdAt", { precision: 3, mode: "date" })
       .defaultNow()
       .notNull(),

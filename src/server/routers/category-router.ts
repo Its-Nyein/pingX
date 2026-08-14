@@ -291,7 +291,6 @@ export const categoryRouter = router({
                     discordId: user.discordId,
                     categoryId: category.id,
                     categoryName: category.name,
-                    transport: discord,
                 })
                     throw new HTTPException(channel.permanent ? 422 : 502, {
                         message: channel.reason
@@ -319,7 +318,6 @@ export const categoryRouter = router({
                     discordId: user.discordId,
                     categoryId: category.id,
                     categoryName: category.name,
-                    transport: discord,
                 })
                     throw new HTTPException(outcome.permanent ? 422 : 502, {
                         message: outcome.reason
@@ -427,7 +425,6 @@ export const categoryRouter = router({
                     discordId: user.discordId,
                     categoryId: event.eventCategoryId!,
                     categoryName: event.name,
-                    transport: discord,
                 })
                     throw new HTTPException(channel.permanent ? 422 : 502, {
                         message: channel.reason
@@ -455,7 +452,6 @@ export const categoryRouter = router({
                     discordId: user.discordId,
                     categoryId: event.eventCategoryId!,
                     categoryName: event.name,
-                    transport: discord,
                 })
                     throw new HTTPException(outcome.permanent ? 422 : 502, {
                         message: outcome.reason

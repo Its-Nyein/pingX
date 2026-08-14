@@ -1,7 +1,8 @@
 import { db, events, users } from "@/db";
 import { DiscordClient } from "@/lib/discord-client";
 import { formatDiscordEmbed } from "@/lib/format-discord-embed";
-import { deliver, openDirectMessage } from "@/lib/delivery";
+import { deliver } from "@/lib/delivery";
+import { resolveTarget } from "@/lib/delivery-target";
 import { evaluateAlertsSafely } from "@/lib/alerts";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import { decodeCursor, encodeCursor } from "@/lib/cursor";
@@ -269,8 +270,6 @@ export const POST = async(req: NextRequest) => {
             data: validationResult.data,
         })
 
-        const discord = new DiscordClient(process.env.DISCORD_BOT_TOKEN);
-
         const [event] = await db
             .insert(events)
             .values({
@@ -281,7 +280,10 @@ export const POST = async(req: NextRequest) => {
             })
             .returning()
 
-        const channel = await openDirectMessage(discord, user.discordId);
+        const { transport: discord, channel } = await resolveTarget({
+            channelId: category.channelId,
+            discordId: user.discordId,
+        });
 
         if (!channel.opened) {
             await db
@@ -297,7 +299,6 @@ export const POST = async(req: NextRequest) => {
                     discordId: user.discordId,
                     categoryId: category.id,
                     categoryName: category.name,
-                    transport: discord,
                 },
                 (error) => log.error("alert evaluation failed", { error })
             );
@@ -328,7 +329,6 @@ export const POST = async(req: NextRequest) => {
                     discordId: user.discordId,
                     categoryId: category.id,
                     categoryName: category.name,
-                    transport: discord,
                 },
                 (error) => log.error("alert evaluation failed", { error })
             );
@@ -373,7 +373,6 @@ export const POST = async(req: NextRequest) => {
                 discordId: user.discordId,
                 categoryId: category.id,
                 categoryName: category.name,
-                transport: discord,
             },
             (error) => log.error("alert evaluation failed", { eventId: event.id, error })
         );

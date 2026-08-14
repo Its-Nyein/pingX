@@ -274,3 +274,26 @@ DROP TYPE "AlertMetric";
 ```
 
 Loses configured rules and their trigger history. Events are untouched.
+
+---
+
+## 0011_add_channels
+
+**Forward** - creates the `ChannelType` enum and `Channel`, and adds
+`EventCategory.channelId`.
+
+Purely additive. A category with a null `channelId` delivers to the owner's
+Discord DM exactly as before, so nothing changes for anyone who does not create
+a channel. Deleting a channel sets the column back to null rather than cascading,
+because losing a delivery target should fall back to the DM, not delete the
+category and its events.
+
+**Rollback**
+
+```sql
+ALTER TABLE "EventCategory" DROP COLUMN "channelId";
+DROP TABLE "Channel";
+DROP TYPE "ChannelType";
+```
+
+Every category returns to DM delivery. Events are untouched.

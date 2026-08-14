@@ -325,6 +325,10 @@ CI runs those integration tests against an ephemeral Neon branch when
 skips when they are not. If you fork this repo without those secrets, the
 integration job is inert — it is not silently passing tests that never ran.
 
+`npm run test:e2e` drives the whole loop in a real browser with Playwright:
+sign in, create a category, send a test event, see it recorded. It starts its own
+dev server on port 3100, so it needs no setup beyond a seeded database.
+
 CI (`.github/workflows/ci.yml`) runs typecheck → lint → test → build on Node 20
 and 22 for every pull request and every push to `main`.
 
@@ -338,15 +342,54 @@ The webhook claims each Stripe event id before doing any work, so a retried
 delivery is a no-op, and it handles `charge.refunded` and
 `charge.dispute.created` by returning the account to Free.
 
+## Channels
+
+By default every category delivers to the account owner's Discord DM. Adding a
+**Discord channel webhook** on `/dashboard/channels` and assigning it to a
+category sends those events to a channel instead, so a whole team sees them
+without each needing an account. Deleting a channel falls back to the DM rather
+than dropping events.
+
+Only Discord webhook URLs are accepted, checked against an explicit pattern — an
+arbitrary URL here would make the server fetch anything you point it at.
+
+## Alerts
+
+An alert rule sends a direct message when a threshold is met, for example five
+failed events in an hour. Rules are evaluated after each event, so an alert
+arrives while the incident is happening rather than on a schedule, and a rule
+will not fire again until its window has passed.
+
+## SDK
+
+```bash
+npm install pingx
+```
+
+```ts
+import { PingX } from "pingx"
+
+const pingx = new PingX({ apiKey: process.env.PINGX_API_KEY! })
+await pingx.send("sale", { plan: "PRO", amount: 49 })
+
+for await (const event of pingx.paginate({ status: "FAILED" })) {
+  console.log(event.id, event.lastError)
+}
+```
+
+Source in `packages/pingx`. `paginate` follows the cursor for you; failures throw
+`PingXError` carrying the status, the server's message, and the `eventId` when
+one exists.
+
 ## Known limitations
 
 Deliberately scoped out rather than overlooked:
 
-- **Delivery is a direct message to the account owner.** There is no channel or
-  team target yet, so pingX cannot serve a group. A Discord channel webhook is
-  the cheap version of that and is planned before Slack or email.
-- **Nothing deletes events.** `Event` grows forever. A per-plan retention window
-  is designed but not built.
+- **Discord is the only destination.** A channel webhook covers a team, but
+  Slack, email and generic webhooks are not built.
+- **Everyone with an account sees only their own events.** A shared channel gives
+  a team visibility, not per-person access control; that would need
+  organisations.
 - **A test event does not count against quota**, because it is the product
   proving itself rather than usage. It is still a real event, so Billing and the
   dashboard card differ by one after each test: Billing reads the quota counter,

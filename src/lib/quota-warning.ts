@@ -1,9 +1,9 @@
-import type { DiscordClient } from "@/lib/discord-client"
+import type { DeliveryTransport } from "@/lib/delivery"
 import { markWarned } from "@/lib/quota"
 import { WARN_THRESHOLD } from "@/lib/quota-period"
 
 interface SendQuotaWarningInput {
-  discord: DiscordClient
+  discord: DeliveryTransport
   channelId: string
   userId: string
   used: number

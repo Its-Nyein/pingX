@@ -112,8 +112,8 @@ export const SignUpForm = () => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <div className="relative">
+                <div className="relative">
+                  <FormControl>
                     <Input
                       type={showPassword ? "text" : "password"}
                       autoComplete="new-password"
@@ -122,23 +122,23 @@ export const SignUpForm = () => {
                       className="h-10 pr-10"
                       {...field}
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      tabIndex={-1}
-                      aria-label={
-                        showPassword ? "Hide password" : "Show password"
-                      }
-                    >
-                      {showPassword ? (
-                        <EyeOff className="size-5" />
-                      ) : (
-                        <Eye className="size-5" />
-                      )}
-                    </button>
-                  </div>
-                </FormControl>
+                  </FormControl>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    tabIndex={-1}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                  >
+                    {showPassword ? (
+                      <EyeOff className="size-5" />
+                    ) : (
+                      <Eye className="size-5" />
+                    )}
+                  </button>
+                </div>
                 <FormMessage />
               </FormItem>
             )}
