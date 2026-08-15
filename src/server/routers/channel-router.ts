@@ -1,7 +1,7 @@
 import { channels, db, eventCategories } from "@/db"
 import { EVENT_CATEGORY_VALIDATOR } from "@/lib/validators/validator"
 import { isDiscordWebhookUrl, redactWebhookUrl } from "@/lib/webhook-url"
-import { and, asc, eq } from "drizzle-orm"
+import { and, asc, desc, eq } from "drizzle-orm"
 import { HTTPException } from "hono/http-exception"
 import { z } from "zod"
 import { router } from "../__internals/router"
@@ -49,7 +49,7 @@ export const channelRouter = router({
       })
       .from(eventCategories)
       .where(eq(eventCategories.userId, ctx.user.id))
-      .orderBy(asc(eventCategories.name))
+      .orderBy(desc(eventCategories.createdAt))
 
     return c.superjson({ categories: rows })
   }),
