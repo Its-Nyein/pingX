@@ -1,7 +1,6 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { client } from "@/lib/client"
@@ -11,7 +10,7 @@ import Link from "next/link"
 import { useState } from "react"
 import { toast } from "sonner"
 
-export const SettingPageContent = ({
+export const DiscordForm = ({
   discordId: initialDiscordId,
 }: {
   discordId: string
@@ -45,7 +44,7 @@ export const SettingPageContent = ({
   const canSave = Boolean(value) && !error && !unchanged && !isPending
 
   return (
-    <Card className="max-w-xl w-full space-y-4">
+    <div className="space-y-4">
       <div className="pt-2">
         <Label htmlFor="discordId">Discord ID</Label>
         <Input
@@ -70,7 +69,7 @@ export const SettingPageContent = ({
       <p className="mt-2 text-sm/6 text-muted-foreground">
         Don&apos;t know how to find your Discord ID?{" "}
         <Link
-          href="/dashboard/account-settings/discord-id"
+          href="/dashboard/settings/discord/guide"
           className="text-link hover:text-link"
         >
           Learn how to obtain it here
@@ -83,6 +82,6 @@ export const SettingPageContent = ({
           {isPending ? "Saving..." : "Save Changes"}
         </Button>
       </div>
-    </Card>
+    </div>
   )
 }

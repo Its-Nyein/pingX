@@ -9,7 +9,7 @@ import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
 
 const MENU_LINKS = [
-  { href: "/dashboard/account-settings", icon: Settings, label: "Settings" },
+  { href: "/dashboard/settings", icon: Settings, label: "Settings" },
   { href: "/dashboard/api-key", icon: Key, label: "Tokens" },
   { href: "/dashboard/upgrade", icon: Gem, label: "Billing" },
 ]

@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, test, type Page } from "@playwright/test"
 
 const EMAIL = process.env.E2E_EMAIL ?? "demo@pingx.local"
 const PASSWORD = process.env.E2E_PASSWORD ?? "Demo1234!@#"
@@ -37,8 +37,6 @@ test.describe("the whole loop", () => {
     const disabled = await sendTest.isDisabled()
 
     if (disabled) {
-      // No Discord ID on the account, so delivery cannot be attempted. The
-      // button must explain itself rather than fail silently.
       await expect(page.getByRole("link", { name: /add your discord id/i })).toBeVisible()
       return
     }
@@ -49,11 +47,34 @@ test.describe("the whole loop", () => {
       page.getByText(/test event delivered|couldn't send the test event/i)
     ).toBeVisible({ timeout: 20_000 })
 
-    await page.reload()
-
     await expect(page.getByRole("table")).toBeVisible({ timeout: 20_000 })
     await expect(
       page.getByText(/delivered|failed/i).first()
     ).toBeVisible()
+
+    const rows = page.locator("tbody tr")
+    const before = await rows.count()
+
+    await page.getByRole("button", { name: /send test event/i }).first().click()
+
+    await expect(
+      page.getByText(/test event delivered|couldn't send the test event/i)
+    ).toBeVisible({ timeout: 20_000 })
+
+    await expect(rows).toHaveCount(before + 1, { timeout: 20_000 })
+
+    await deleteCategory(page)
   })
 })
+
+async function deleteCategory(page: Page) {
+  await page.goto("/dashboard")
+
+  await page
+    .getByRole("button", { name: `Delete ${category}`, exact: true })
+    .click()
+
+  await page.getByRole("button", { name: "Delete", exact: true }).click()
+
+  await expect(page.getByText(category)).toHaveCount(0, { timeout: 15_000 })
+}

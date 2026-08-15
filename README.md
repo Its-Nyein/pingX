@@ -8,6 +8,8 @@ Next.js 16 App Router SaaS that turns API calls into Discord notifications.
 Better Auth for auth, Hono for the API layer, Drizzle ORM on Neon Postgres,
 Stripe for billing.
 
+![pingX](public/pingx.png)
+
 Send an event, get a Discord DM:
 
 ```bash
@@ -294,17 +296,6 @@ curl "https://ping-x.netlify.app/api/v1/events?category=sale&status=FAILED&limit
 Pagination is keyset, not offset: the cursor carries the last row's
 `(createdAt, id)`, so pages cannot repeat or skip rows when new events arrive
 mid-read. `nextCursor` is `null` on the last page.
-
-## Screenshots
-
-<!-- TODO: add screenshots.
-     Suggested set, 1280px wide, light and dark:
-       docs/screenshots/dashboard.png       - Account home with categories
-       docs/screenshots/category.png        - Event table with status badges
-       docs/screenshots/billing.png         - Plan strip and usage meters
-       docs/screenshots/discord.png         - A delivered embed in Discord -->
-
-_Coming soon._
 
 ## Testing
 

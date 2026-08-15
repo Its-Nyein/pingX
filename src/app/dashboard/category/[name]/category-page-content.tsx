@@ -1,7 +1,12 @@
 "use client"
 
 import type { Event, EventCategory, Status } from "@/db"
-import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query"
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
 import { toast } from "sonner"
 import { EmptyCategoryState } from "./empty-category-state"
 import { useEffect, useMemo, useState } from "react"
@@ -69,6 +74,16 @@ export const CategoryPageContent = ({
   category,
 }: CategoryPageContentProps) => {
   const searchParams = useSearchParams()
+
+  const queryClient = useQueryClient()
+
+  const refreshCategory = () => {
+    queryClient.invalidateQueries({ queryKey: ["events", category.name] })
+    queryClient.invalidateQueries({ queryKey: ["event-series", category.name] })
+    queryClient.invalidateQueries({
+      queryKey: ["category", category.name, "hasEvents"],
+    })
+  }
 
   const [activeTab, setActiveTab] = useState<"today" | "week" | "month">(
     "today"
@@ -347,7 +362,7 @@ export const CategoryPageContent = ({
       <EmptyCategoryState
         categoryName={category.name}
         hasDiscordId={hasDiscordId}
-        onSent={() => refetch()}
+        onSent={refreshCategory}
       />
     )
   }
@@ -437,7 +452,7 @@ export const CategoryPageContent = ({
                 categoryName={category.name}
                 hasDiscordId={hasDiscordId}
                 size="sm"
-                onSent={() => refetch()}
+                onSent={refreshCategory}
               />
             </FilterToolbar>
 

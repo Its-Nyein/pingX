@@ -38,6 +38,17 @@ export const projectRouter = router({
     return c.json({ apiKey })
   }),
 
+  updateProfile: privateProcedure
+    .input(z.object({ name: z.string().trim().min(2).max(50) }))
+    .mutation(async ({ c, ctx, input }) => {
+      await db
+        .update(users)
+        .set({ name: input.name })
+        .where(eq(users.id, ctx.user.id))
+
+      return c.json({ success: true })
+    }),
+
   setDiscordId: privateProcedure
     .input(z.object({ discordId: DISCORD_ID_VALIDATOR }))
     .mutation(async ({ c, ctx, input }) => {
