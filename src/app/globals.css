@@ -101,7 +101,23 @@ layer(base);
   }
 }
 
+html[data-font="inter"] {
+  --font-sans-active: var(--font-inter);
+}
+
+html[data-font="manrope"] {
+  --font-sans-active: var(--font-manrope);
+}
+
+html[data-font="system"] {
+  --font-sans-active: ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
 @theme inline {
+  --font-sans:
+    var(--font-sans-active, var(--font-roboto)), ui-sans-serif, system-ui,
+    sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+
   --font-title:
     var(--font-bebas), ui-sans-serif, system-ui, sans-serif,
     'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';

@@ -52,7 +52,7 @@ const STEPS: {
     body: (
       <>
         Paste it into the Discord ID field on{" "}
-        <Link href="/dashboard/account-settings" className="text-link">
+        <Link href="/dashboard/settings/discord" className="text-link">
           Settings
         </Link>{" "}
         and save. pingX delivers every matching event to you as a direct
@@ -140,7 +140,7 @@ const Page = async () => {
         </div>
 
         <Link
-          href="/dashboard/account-settings"
+          href="/dashboard/settings/discord"
           className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft aria-hidden className="size-4" />

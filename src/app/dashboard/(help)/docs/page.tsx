@@ -150,12 +150,12 @@ const Page = async () => {
           <Section title="Before anything arrives">
             <p>
               Delivery needs your Discord ID, which lives in{" "}
-              <Link href="/dashboard/account-settings" className="text-link">
+              <Link href="/dashboard/settings/discord" className="text-link">
                 Settings
               </Link>
               . If you have not found it yet, the{" "}
               <Link
-                href="/dashboard/account-settings/discord-id"
+                href="/dashboard/settings/discord/guide"
                 className="text-link"
               >
                 step-by-step guide

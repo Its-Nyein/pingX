@@ -18,7 +18,7 @@ const NAV_ITEMS = [
   { title: "Overview", url: "/dashboard", icon: Home },
   { title: "Billing", url: "/dashboard/upgrade", icon: Gem },
   { title: "Tokens", url: "/dashboard/api-key", icon: Key },
-  { title: "Settings", url: "/dashboard/account-settings", icon: Settings },
+  { title: "Settings", url: "/dashboard/settings", icon: Settings },
 ]
 
 export const CommandSearch = ({

@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils"
 import { SearchTrigger } from "@/components/shell/command-search"
-import { BellRing, BookOpen, Gem, Hash, Home, Key, LifeBuoy, LucideIcon, Settings } from "lucide-react"
+import { BellRing, BookOpen, ChevronRight, Gem, Hash, Home, Key, LifeBuoy, LucideIcon, Settings } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
@@ -10,6 +10,7 @@ interface SidebarItem {
   href: string
   icon: LucideIcon
   text: string
+  hasChildren?: boolean
 }
 
 interface SidebarSection {
@@ -28,7 +29,12 @@ export const SIDEBAR_ITEMS: SidebarSection[] = [
       { href: "/dashboard/api-key", icon: Key, text: "Tokens" },
       { href: "/dashboard/alerts", icon: BellRing, text: "Alerts" },
       { href: "/dashboard/channels", icon: Hash, text: "Channels" },
-      { href: "/dashboard/account-settings", icon: Settings, text: "Settings" },
+      {
+        href: "/dashboard/settings",
+        icon: Settings,
+        text: "Settings",
+        hasChildren: true,
+      },
     ],
   },
   {
@@ -103,6 +109,18 @@ export const ProductSidebar = ({
                     >
                       <item.icon className="size-4 shrink-0 text-muted-foreground" />
                       <span className="truncate">{item.text}</span>
+
+                      {item.hasChildren ? (
+                        <ChevronRight
+                          aria-hidden
+                          className={cn(
+                            "ml-auto size-4 shrink-0",
+                            isActive
+                              ? "text-muted-foreground"
+                              : "text-muted-foreground/50"
+                          )}
+                        />
+                      ) : null}
                     </Link>
                   </li>
                 )
