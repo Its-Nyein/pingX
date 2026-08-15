@@ -33,8 +33,17 @@ export const ChannelsPageContent = ({
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["channels"] })
-    queryClient.invalidateQueries({ queryKey: ["channel-categories"] })
+    queryClient.invalidateQueries({ queryKey: ["channel-assignments"] })
   }
+
+  const { data: assignmentData } = useQuery({
+    queryKey: ["channel-assignments"],
+    queryFn: async () => {
+      const res = await client.channel.listAssignments.$get()
+      return await res.json()
+    },
+    initialData: { categories },
+  })
 
   const { data } = useQuery({
     queryKey: ["channels"],
@@ -195,7 +204,7 @@ export const ChannelsPageContent = ({
         </p>
 
         <ul className="mt-4 divide-y divide-border">
-          {categories.map((category) => (
+          {assignmentData.categories.map((category) => (
             <li
               key={category.name}
               className="flex flex-wrap items-center gap-3 py-3"

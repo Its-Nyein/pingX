@@ -41,6 +41,19 @@ export const channelRouter = router({
     })
   }),
 
+  listAssignments: privateProcedure.query(async ({ c, ctx }) => {
+    const rows = await db
+      .select({
+        name: eventCategories.name,
+        channelId: eventCategories.channelId,
+      })
+      .from(eventCategories)
+      .where(eq(eventCategories.userId, ctx.user.id))
+      .orderBy(asc(eventCategories.name))
+
+    return c.superjson({ categories: rows })
+  }),
+
   createChannel: privateProcedure
     .input(CHANNEL_INPUT)
     .mutation(async ({ c, ctx, input }) => {
