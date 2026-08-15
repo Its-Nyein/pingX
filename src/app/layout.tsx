@@ -1,8 +1,11 @@
 import type { Metadata } from "next"
 import localFont from "next/font/local"
+import Script from "next/script"
+import NextTopLoader from "nextjs-toploader"
 import "./globals.css"
 import { cn } from "@/lib/utils"
 import { Providers } from "@/components/providers"
+import { FONT_INIT_SCRIPT } from "@/lib/font"
 
 const roboto = localFont({
   src: "./fonts/roboto-variable.woff2",
@@ -10,6 +13,22 @@ const roboto = localFont({
   style: "normal",
   display: "swap",
   variable: "--font-roboto",
+})
+
+const inter = localFont({
+  src: "./fonts/inter-variable.woff2",
+  weight: "100 900",
+  style: "normal",
+  display: "swap",
+  variable: "--font-inter",
+})
+
+const manrope = localFont({
+  src: "./fonts/manrope-variable.woff2",
+  weight: "200 800",
+  style: "normal",
+  display: "swap",
+  variable: "--font-manrope",
 })
 
 const bebas = localFont({
@@ -34,10 +53,23 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={cn(roboto.variable, bebas.variable)}
+      className={cn(roboto.variable, inter.variable, manrope.variable, bebas.variable)}
       suppressHydrationWarning
     >
+      <head>
+        <Script
+          id="font-init"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: FONT_INIT_SCRIPT }}
+        />
+      </head>
       <body className="min-h-[calc(100vh-1px)] font-sans bg-background text-foreground antialiased flex flex-col">
+        <NextTopLoader
+          color="var(--primary)"
+          height={2}
+          shadow={false}
+          showSpinner={false}
+        />
         <main className="relative flex flex-col flex-1">
           <Providers>{children}</Providers>
         </main>

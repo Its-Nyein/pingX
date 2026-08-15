@@ -15,7 +15,7 @@ export const EmptyCategoryState = ({
 }: {
   categoryName: string
   hasDiscordId: boolean
-  onSent?: () => void
+  onSent?: (result: { delivered: boolean }) => void
 }) => {
   const [sent, setSent] = useState(false)
   const baseUrl = appUrl()
@@ -55,9 +55,9 @@ export const EmptyCategoryState = ({
         <SendTestEventButton
           categoryName={categoryName}
           hasDiscordId={hasDiscordId}
-          onSent={() => {
-            setSent(true)
-            onSent?.()
+          onSent={(result) => {
+            if (result.delivered) setSent(true)
+            onSent?.(result)
           }}
         />
       </div>

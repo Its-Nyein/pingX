@@ -16,7 +16,7 @@ export const SendTestEventButton = ({
   categoryName: string
   hasDiscordId: boolean
   size?: "sm" | "default"
-  onSent?: () => void
+  onSent?: (result: { delivered: boolean }) => void
 }) => {
   const { mutate, isPending } = useMutation({
     mutationFn: async () => {
@@ -26,12 +26,14 @@ export const SendTestEventButton = ({
       toast.success("Test event delivered", {
         description: "Check your Discord DMs.",
       })
-      onSent?.()
     },
     onError: (error) => {
       toast.error("Couldn't send the test event", {
         description: error.message,
       })
+    },
+    onSettled: (_data, error) => {
+      onSent?.({ delivered: !error })
     },
   })
 
@@ -48,7 +50,7 @@ export const SendTestEventButton = ({
         </Button>
 
         <Link
-          href="/dashboard/account-settings"
+          href="/dashboard/settings/discord"
           className="text-sm text-link hover:underline"
         >
           Add your Discord ID
