@@ -1,24 +1,30 @@
-import type { DeliveryTransport } from "@/lib/delivery"
+import { openDirectMessage } from "@/lib/delivery"
+import { DiscordClient } from "@/lib/discord-client"
 import { markWarned } from "@/lib/quota"
 import { WARN_THRESHOLD } from "@/lib/quota-period"
 
 interface SendQuotaWarningInput {
-  discord: DeliveryTransport
-  channelId: string
+  discordId: string | null
   userId: string
   used: number
   limit: number
 }
 
 export const sendQuotaWarning = async ({
-  discord,
-  channelId,
+  discordId,
   userId,
   used,
   limit,
 }: SendQuotaWarningInput): Promise<void> => {
+  if (!discordId) return
+
   try {
-    await discord.sendEmbed(channelId, {
+    const discord = new DiscordClient(process.env.DISCORD_BOT_TOKEN)
+    const channel = await openDirectMessage(discord, discordId)
+
+    if (!channel.opened) return
+
+    await discord.sendEmbed(channel.channelId, {
       title: "Quota warning",
       description: `You've used ${Math.round(
         WARN_THRESHOLD * 100

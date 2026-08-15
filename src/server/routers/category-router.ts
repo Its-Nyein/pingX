@@ -11,9 +11,7 @@ import { RATE_LIMIT } from "@/config";
 import { isUniqueViolation } from "@/lib/db-error";
 import { isSearchable, likePattern } from "@/lib/search";
 import { retentionCutoff } from "@/lib/retention";
-import { DiscordClient } from "@/lib/discord-client";
-import { deliver, openDirectMessage } from "@/lib/delivery";
-import { evaluateAlertsSafely } from "@/lib/alerts";
+import { deliverEvent } from "@/lib/deliver-event";
 import { formatDiscordEmbed, type EventData } from "@/lib/format-discord-embed";
 import { HTTPException } from "hono/http-exception";
 
@@ -277,61 +275,25 @@ export const categoryRouter = router({
                     })
                     .returning()
 
-                const discord = new DiscordClient(process.env.DISCORD_BOT_TOKEN)
-                const channel = await openDirectMessage(discord, user.discordId)
-
-                if (!channel.opened) {
-                    await db
-                        .update(events)
-                        .set({ deliveryStatus: "FAILED", lastError: channel.reason })
-                        .where(eq(events.id, event.id))
-
-                await evaluateAlertsSafely({
-                    userId: user.id,
-                    discordId: user.discordId,
+                const result = await deliverEvent({
+                    eventId: event.id,
                     categoryId: category.id,
                     categoryName: category.name,
-                })
-                    throw new HTTPException(channel.permanent ? 422 : 502, {
-                        message: channel.reason
-                    })
-                }
-
-                const outcome = await deliver(
-                    discord,
-                    channel.channelId,
-                    formatDiscordEmbed({
+                    channelId: category.channelId,
+                    userId: user.id,
+                    discordId: user.discordId,
+                    embed: formatDiscordEmbed({
                         categoryName: category.name,
                         description: "Test event sent from your pingX dashboard.",
                         data,
-                    })
-                )
-
-                if (!outcome.delivered) {
-                    await db
-                        .update(events)
-                        .set({ deliveryStatus: "FAILED", lastError: outcome.reason })
-                        .where(eq(events.id, event.id))
-
-                await evaluateAlertsSafely({
-                    userId: user.id,
-                    discordId: user.discordId,
-                    categoryId: category.id,
-                    categoryName: category.name,
+                    }),
                 })
-                    throw new HTTPException(outcome.permanent ? 422 : 502, {
-                        message: outcome.reason
+
+                if (!result.delivered) {
+                    throw new HTTPException(result.permanent ? 422 : 502, {
+                        message: result.reason
                     })
                 }
-
-                await db
-                    .update(events)
-                    .set({
-                        deliveryStatus: "DELIVERED",
-                        deliveredAt: outcome.at,
-                        lastError: null,
-                    })
-                    .where(eq(events.id, event.id))
 
                 return c.json({ eventId: event.id })
             }),
@@ -411,61 +373,33 @@ export const categoryRouter = router({
                     })
                 }
 
-                const discord = new DiscordClient(process.env.DISCORD_BOT_TOKEN)
-                const channel = await openDirectMessage(discord, user.discordId)
+                const [category] = event.eventCategoryId
+                    ? await db
+                        .select({ id: eventCategories.id, name: eventCategories.name, channelId: eventCategories.channelId })
+                        .from(eventCategories)
+                        .where(eq(eventCategories.id, event.eventCategoryId))
+                        .limit(1)
+                    : []
 
-                if (!channel.opened) {
-                    await db
-                        .update(events)
-                        .set({ deliveryStatus: "FAILED", lastError: channel.reason })
-                        .where(eq(events.id, event.id))
-
-                await evaluateAlertsSafely({
+                const result = await deliverEvent({
+                    eventId: event.id,
+                    categoryId: category?.id ?? null,
+                    categoryName: category?.name ?? event.name,
+                    channelId: category?.channelId ?? null,
                     userId: user.id,
                     discordId: user.discordId,
-                    categoryId: event.eventCategoryId!,
-                    categoryName: event.name,
-                })
-                    throw new HTTPException(channel.permanent ? 422 : 502, {
-                        message: channel.reason
-                    })
-                }
-
-                const outcome = await deliver(
-                    discord,
-                    channel.channelId,
-                    formatDiscordEmbed({
+                    embed: formatDiscordEmbed({
                         categoryName: event.name,
                         data: event.data as EventData,
                         timestamp: event.createdAt,
-                    })
-                )
-
-                if (!outcome.delivered) {
-                    await db
-                        .update(events)
-                        .set({ deliveryStatus: "FAILED", lastError: outcome.reason })
-                        .where(eq(events.id, event.id))
-
-                await evaluateAlertsSafely({
-                    userId: user.id,
-                    discordId: user.discordId,
-                    categoryId: event.eventCategoryId!,
-                    categoryName: event.name,
+                    }),
                 })
-                    throw new HTTPException(outcome.permanent ? 422 : 502, {
-                        message: outcome.reason
+
+                if (!result.delivered) {
+                    throw new HTTPException(result.permanent ? 422 : 502, {
+                        message: result.reason
                     })
                 }
-
-                await db
-                    .update(events)
-                    .set({
-                        deliveryStatus: "DELIVERED",
-                        deliveredAt: outcome.at,
-                        lastError: null,
-                    })
-                    .where(eq(events.id, event.id))
 
                 return c.json({ success: true })
             }),
