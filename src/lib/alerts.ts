@@ -3,6 +3,7 @@ import type { AlertMetric } from "@/db/schema/enums"
 import { describeRule, shouldTrigger, windowStart } from "@/lib/alert-rule"
 import type { DeliveryTransport, DirectMessageTransport } from "@/lib/delivery"
 import { deliver, openDirectMessage } from "@/lib/delivery"
+import { DiscordClient } from "@/lib/discord-client"
 import { and, count, eq, gte, isNull, or } from "drizzle-orm"
 
 export { ALERT_LIMITS, describeRule } from "@/lib/alert-rule"
@@ -12,7 +13,7 @@ interface EvaluateInput {
   discordId: string | null
   categoryId: string
   categoryName: string
-  transport: DeliveryTransport & DirectMessageTransport
+  transport?: DeliveryTransport & DirectMessageTransport
   now?: Date
 }
 
@@ -21,7 +22,7 @@ export const evaluateAlerts = async ({
   discordId,
   categoryId,
   categoryName,
-  transport,
+  transport = new DiscordClient(process.env.DISCORD_BOT_TOKEN),
   now = new Date(),
 }: EvaluateInput): Promise<{ triggered: number }> => {
   const rules = await db

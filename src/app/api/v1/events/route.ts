@@ -1,7 +1,7 @@
 import { db, events, users } from "@/db";
 import { DiscordClient } from "@/lib/discord-client";
 import { formatDiscordEmbed } from "@/lib/format-discord-embed";
-import { deliver, openDirectMessage } from "@/lib/delivery";
+import { deliverEvent } from "@/lib/deliver-event";
 import { evaluateAlertsSafely } from "@/lib/alerts";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import { decodeCursor, encodeCursor } from "@/lib/cursor";
@@ -269,8 +269,6 @@ export const POST = async(req: NextRequest) => {
             data: validationResult.data,
         })
 
-        const discord = new DiscordClient(process.env.DISCORD_BOT_TOKEN);
-
         const [event] = await db
             .insert(events)
             .values({
@@ -281,78 +279,32 @@ export const POST = async(req: NextRequest) => {
             })
             .returning()
 
-        const channel = await openDirectMessage(discord, user.discordId);
+        const result = await deliverEvent({
+            eventId: event.id,
+            categoryId: category.id,
+            categoryName: category.name,
+            channelId: category.channelId,
+            userId: user.id,
+            discordId: user.discordId,
+            embed: eventData,
+            onError: (message, fields) => log.error(message, fields),
+        });
 
-        if (!channel.opened) {
-            await db
-                .update(events)
-                .set({ deliveryStatus: 'FAILED', lastError: channel.reason })
-                .where(eq(events.id, event.id))
-
-            log.error("could not open a Discord DM", { eventId: event.id, reason: channel.reason });
-
-            await evaluateAlertsSafely(
-                {
-                    userId: user.id,
-                    discordId: user.discordId,
-                    categoryId: category.id,
-                    categoryName: category.name,
-                    transport: discord,
-                },
-                (error) => log.error("alert evaluation failed", { error })
-            );
-
-            return NextResponse.json(
-                { message: channel.reason, eventId: event.id },
-                { status: channel.permanent ? 422 : 502 }
-            );
-        }
-
-        const outcome = await deliver(discord, channel.channelId, eventData);
-
-        if (!outcome.delivered) {
-            await db
-                .update(events)
-                .set({ deliveryStatus: 'FAILED', lastError: outcome.reason })
-                .where(eq(events.id, event.id))
-
-            log.error("discord delivery failed", {
-                eventId: event.id,
-                permanent: outcome.permanent,
-                reason: outcome.reason,
-            });
-
-            await evaluateAlertsSafely(
-                {
-                    userId: user.id,
-                    discordId: user.discordId,
-                    categoryId: category.id,
-                    categoryName: category.name,
-                    transport: discord,
-                },
-                (error) => log.error("alert evaluation failed", { error })
-            );
-
+        if (!result.delivered) {
             return NextResponse.json({
-                message: outcome.permanent
-                    ? outcome.reason
-                    : "Could not deliver the event to Discord. It has been stored and can be resent.",
+                message: result.permanent
+                    ? result.reason
+                    : "Could not deliver the event. It has been stored and can be resent.",
                 eventId: event.id
-            }, { status: outcome.permanent ? 422 : 502 });
+            }, { status: result.permanent ? 422 : 502 });
         }
-
-        await db
-            .update(events)
-            .set({ deliveryStatus: 'DELIVERED', deliveredAt: outcome.at, lastError: null })
-            .where(eq(events.id, event.id))
 
         try {
             const { used, warned80 } = await incrementQuota(user.id);
 
             if (crossedWarnThreshold(used, quota.limit, warned80)) {
                 await sendQuotaWarning({
-                    discord,
-                    channelId: channel.channelId,
+                    discordId: user.discordId,
                     userId: user.id,
                     used,
                     limit: quota.limit,
@@ -373,7 +325,6 @@ export const POST = async(req: NextRequest) => {
                 discordId: user.discordId,
                 categoryId: category.id,
                 categoryName: category.name,
-                transport: discord,
             },
             (error) => log.error("alert evaluation failed", { eventId: event.id, error })
         );
