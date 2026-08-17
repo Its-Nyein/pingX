@@ -81,7 +81,7 @@ const BentoCard = ({
 }) => (
   <div
     className={cn(
-      "flex flex-col rounded-lg border border-border bg-card p-6 sm:p-8",
+      "flex min-w-0 flex-col rounded-lg border border-border bg-card p-6 sm:p-8",
       className
     )}
   >
@@ -91,7 +91,7 @@ const BentoCard = ({
     <p className="mt-2 max-w-lg text-sm leading-relaxed text-muted-foreground">
       {description}
     </p>
-    <div className="mt-6 flex-1">{children}</div>
+    <div className="mt-6 min-w-0 flex-1">{children}</div>
   </div>
 )
 
