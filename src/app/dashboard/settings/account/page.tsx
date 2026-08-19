@@ -1,5 +1,5 @@
 import { SettingsSection } from "@/components/shell/settings-section"
-import { SignOutButton } from "@/components/sign-out-button"
+import { DeleteAccount } from "./delete-account"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { FREE_QUOTA, PRO_QUOTA } from "@/config"
@@ -52,15 +52,7 @@ const Page = async () => {
 
         <Separator />
 
-        <div>
-          <p className="text-sm font-medium text-foreground">Sign out</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Ends this session on this device. Your events and settings are kept.
-          </p>
-          <div className="mt-3">
-            <SignOutButton size="sm" />
-          </div>
-        </div>
+        <DeleteAccount />
       </div>
     </SettingsSection>
   )

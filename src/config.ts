@@ -18,3 +18,5 @@ export const FREE_QUOTA = {
     proDays: 365,
     graceDays: 30,
   } as const
+
+  export const DELETE_CONFIRMATION = "Confirm"

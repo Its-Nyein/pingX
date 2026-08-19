@@ -1,11 +1,12 @@
 import { router } from "../__internals/router"
 import { privateProcedure } from "../procedures"
 import { db, eventCategories, users } from "@/db"
-import { FREE_QUOTA, PRO_QUOTA } from "@/config"
+import { DELETE_CONFIRMATION, FREE_QUOTA, PRO_QUOTA } from "@/config"
 import { getOrRollQuota } from "@/lib/quota"
 import { DISCORD_ID_VALIDATOR } from "@/lib/validators/validator"
 import { generateApiKey } from "@/lib/api-key"
 import { count, eq } from "drizzle-orm"
+import { HTTPException } from "hono/http-exception"
 import { z } from "zod"
 
 export const projectRouter = router({
@@ -45,6 +46,20 @@ export const projectRouter = router({
         .update(users)
         .set({ name: input.name })
         .where(eq(users.id, ctx.user.id))
+
+      return c.json({ success: true })
+    }),
+
+  deleteAccount: privateProcedure
+    .input(z.object({ confirmation: z.string() }))
+    .mutation(async ({ c, ctx, input }) => {
+      if (input.confirmation.trim().toLowerCase() !== DELETE_CONFIRMATION.toLowerCase()) {
+        throw new HTTPException(400, {
+          message: `Type "${DELETE_CONFIRMATION}" to delete your account.`,
+        })
+      }
+
+      await db.delete(users).where(eq(users.id, ctx.user.id))
 
       return c.json({ success: true })
     }),
